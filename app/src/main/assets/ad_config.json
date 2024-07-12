@@ -1,0 +1,44 @@
+{
+  "easy_esc": 200,
+  "easy_kfv": 3,
+  "ope_easy": [
+    {
+      "easy_ty": "open",
+      "easy_pt": "admob",
+      "easy_isd": "ca-app-pub-3940256099942544/1033173712",
+      "easy_no": 1
+    }
+  ],
+  "home_easy": [
+    {
+      "easy_ty": "native",
+      "easy_pt": "admob",
+      "easy_isd": "ca-app-pub-3940256099942544/2247696110",
+      "easy_no": 1
+    }
+  ],
+  "resu_easy": [
+    {
+      "easy_ty": "native",
+      "easy_pt": "admob",
+      "easy_isd": "ca-app-pub-3940256099942544/2247696110",
+      "easy_no": 1
+    }
+  ],
+  "cont_easy": [
+    {
+      "easy_ty": "interstitial",
+      "easy_pt": "admob",
+      "easy_isd": "ca-app-pub-3940256099942544/1033173712",
+      "easy_no": 3
+    }
+  ],
+  "list_easy": [
+    {
+      "easy_ty": "interstitial",
+      "easy_pt": "admob",
+      "easy_isd": "ca-app-pub-3940256099942544/1033173712",
+      "easy_no": 1
+    }
+  ]
+}

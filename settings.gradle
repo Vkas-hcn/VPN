@@ -1,0 +1,3 @@
+rootProject.name = "hot Vpn"
+include ':app'
+include ':core'

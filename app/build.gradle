@@ -1,0 +1,84 @@
+apply plugin: 'com.android.application'
+
+buildscript {
+    repositories {
+        maven { url 'https://plugins.gradle.org/m2/' }
+    }
+}
+
+repositories {
+    maven { url 'https://maven.google.com' }
+}
+
+android {
+    compileSdkVersion 34
+    defaultConfig {
+        applicationId "com.show.cat.caar.best.new.fastvpn"
+        minSdkVersion 24
+        targetSdkVersion 34
+        versionCode 7
+        versionName "1.0.7"
+        multiDexEnabled true
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+
+        buildConfigField "Boolean", "GOOGlE_AD", "true"
+        buildConfigField "String", "GOOGLE_BANNER", "\"ca-app-pub-3940256099942544/9214589741\""
+        buildConfigField "String", "GOOGLE_INTERSTITIAL", "\"ca-app-pub-3940256099942544/8691691433\""
+        buildConfigField "String", "GOOGLE_NATIVE", "\"ca-app-pub-3940256099942544/2247696110\""
+        buildConfigField "String", "GOOGLE_APPOPEN", "\"ca-app-pub-3940256099942544/9257395921\""
+
+        def adConfigFile = file('src/main/assets/ad_config.json')
+        def adConfigContent = adConfigFile.text.replace("\n", "\\n").replace("\"", "\\\"")
+
+        buildConfigField "String", "GOOGLE_AD_DATA", "\"${adConfigContent}\""
+    }
+
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+        }
+    }
+    compileOptions {
+        sourceCompatibility 11
+        targetCompatibility 11
+    }
+    packagingOptions {
+        jniLibs {
+            excludes += ['lib/arm64-v8a/libopenvpn.so', 'lib/arm64-v8a/libopvpnutil.so', 'lib/arm64-v8a/libjbcrypto.so', 'lib/arm64-v8a/libstlport_shared.so', 'lib/armeabi-v7a/libopenvpn.so', 'lib/armeabi-v7a/libopvpnutil.so', 'lib/armeabi-v7a/libjbcrypto.so', 'lib/armeabi-v7a/libstlport_shared.so', 'lib/x86/libopenvpn.so', 'lib/x86/libopvpnutil.so', 'lib/x86/libjbcrypto.so', 'lib/x86/libstlport_shared.so', 'lib/x86_64/libopenvpn.so', 'lib/x86_64/libopvpnutil.so', 'lib/x86_64/libjbcrypto.so', 'lib/x86_64/libstlport_shared.so']
+        }
+    }
+    namespace 'com.vpn.supervpnfree'
+
+}
+
+dependencies {
+    implementation project(':core')
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'com.google.android.material:material:1.12.0-alpha03'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.multidex:multidex:2.0.1'
+    implementation 'com.jakewharton:butterknife:10.2.3'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.3'
+    implementation "com.airbnb.android:lottie:4.1.0"
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
+    implementation 'com.google.android.gms:play-services-ads:22.6.0'
+
+    implementation platform('com.google.firebase:firebase-bom:31.2.2')
+    implementation 'com.google.firebase:firebase-analytics-ktx'
+    implementation 'com.google.firebase:firebase-config-ktx'
+    implementation 'com.google.firebase:firebase-crashlytics-ktx'
+    implementation 'com.facebook.android:facebook-android-sdk:12.3.0'
+}
+
+
+
+

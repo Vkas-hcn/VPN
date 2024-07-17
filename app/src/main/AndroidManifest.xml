@@ -24,6 +24,7 @@
         <activity
             android:name="com.vpn.supervpnfree.activities.SplashActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:theme="@style/Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -39,10 +40,17 @@
         <activity
             android:name="com.vpn.supervpnfree.activities.MainActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:hardwareAccelerated="true" />
         <activity
             android:name="com.vpn.supervpnfree.activities.ServerActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
+            android:hardwareAccelerated="true" />
+        <activity
+            android:name=".activities.EndActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
             android:hardwareAccelerated="true" />
     </application>
 

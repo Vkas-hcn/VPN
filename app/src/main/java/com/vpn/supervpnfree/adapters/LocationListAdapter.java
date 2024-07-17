@@ -3,6 +3,7 @@ package com.vpn.supervpnfree.adapters;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,30 +12,26 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.vpn.supervpnfree.BuildConfig;
 import com.vpn.supervpnfree.Preference;
 import com.vpn.supervpnfree.R;
-import com.vpn.supervpnfree.dialog.CountryData;
-
-import java.util.ArrayList;
+import com.vpn.supervpnfree.activities.ServerActivity;
+import com.vpn.supervpnfree.data.Hot;
+import com.vpn.supervpnfree.data.KeyAppFun;
+import com.vpn.supervpnfree.data.ServiceData;
 import java.util.List;
-import java.util.Locale;
 
-import static com.vpn.supervpnfree.utils.BillConfig.PRIMIUM_STATE;
 
 
 public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapter.ViewHolder> {
 
-    public Context context;
+    public ServerActivity context;
     private Preference preference;
-    private List<CountryData> regions;
-    private RegionListAdapterInterface listAdapterInterface;
 
-    public LocationListAdapter(RegionListAdapterInterface listAdapterInterface, Activity cntec) {
-        this.listAdapterInterface = listAdapterInterface;
+    private List<ServiceData> serviceDataList;
+    public LocationListAdapter( ServerActivity cntec,List<ServiceData> serviceDataList) {
         this.context = cntec;
         preference = new Preference(this.context);
+        this.serviceDataList = serviceDataList;
     }
 
     @NonNull
@@ -46,44 +43,27 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
 
     @Override
     public void onBindViewHolder(@NonNull final ViewHolder holder, int position) {
-        final CountryData datanew = this.regions.get(holder.getAdapterPosition());
-//        final Country data = datanew.getCountryvalue();
-//        Locale locale = new Locale("", data.getCountry());
-
+        ServiceData bean = serviceDataList.get(position);
         if (position == 0) {
             holder.flag.setImageResource(context.getResources().getIdentifier("drawable/earthspeed", null, context.getPackageName()));
             holder.app_name.setText(R.string.best_performance_server);
-            holder.limit.setVisibility(View.GONE);
+            holder.limit.setVisibility(View.INVISIBLE);
         } else {
-            ImageView imageView = holder.flag;
-            Resources resources = context.getResources();
-//            String sb = "drawable/" + data.getCountry().toLowerCase();
-//            imageView.setImageResource(resources.getIdentifier(sb, null, context.getPackageName()));
-//            holder.app_name.setText(locale.getDisplayCountry());
+            holder.flag.setImageResource(KeyAppFun.INSTANCE.getFlagImageData(bean.getWIqcDNWy()));
+            holder.app_name.setText(bean.getWIqcDNWy());
             holder.limit.setVisibility(View.VISIBLE);
         }
-        if (datanew.isPro()) {
-            holder.pro.setVisibility(View.VISIBLE);
-        } else {
-            holder.pro.setVisibility(View.GONE);
-        }
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                listAdapterInterface.onCountrySelected(regions.get(holder.getAdapterPosition()));
-            }
+
+        holder.itemView.setOnClickListener(view -> {
+            Hot.INSTANCE.chooeServices(context,preference,bean);
         });
     }
 
     @Override
     public int getItemCount() {
-        return regions != null ? regions.size() : 0;
+        return serviceDataList != null ? serviceDataList.size() : 0;
     }
 
-
-    public interface RegionListAdapterInterface {
-        void onCountrySelected(CountryData item);
-    }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView app_name;
@@ -98,4 +78,6 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
             this.pro = itemView.findViewById(R.id.pro);
         }
     }
+
+
 }

@@ -76,11 +76,14 @@ class ShadowsocksConnection(private var listenForDeath: Boolean = false) : Servi
             }
         }
         override fun trafficUpdated(profileId: Long, stats: TrafficStats) {
+            Log.e("TAG", "trafficUpdated: ${profileId}", )
             val callback = callback ?: return
             GlobalScope.launch(Dispatchers.Main.immediate) {
                 callback.trafficUpdated(profileId, stats) }
         }
         override fun trafficPersisted(profileId: Long) {
+            Log.e("TAG", "trafficPersisted: ${profileId}", )
+
             val callback = callback ?: return
             GlobalScope.launch(Dispatchers.Main.immediate) { callback.trafficPersisted(profileId) }
         }

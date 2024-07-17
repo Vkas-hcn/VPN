@@ -1,18 +1,13 @@
 package com.vpn.supervpnfree;
 
 import android.annotation.SuppressLint;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.os.Build;
-import android.text.TextUtils;
-import android.util.Log;
-
 import androidx.multidex.MultiDexApplication;
 
-
-import java.util.ArrayList;
+import com.tencent.mmkv.MMKV;
+import com.vpn.supervpnfree.data.Hot;
+import com.vpn.supervpnfree.utils.AdManager;
+import com.vpn.supervpnfree.utils.GlobalTimer;
 
 public class MainApp extends MultiDexApplication {
 
@@ -29,6 +24,10 @@ public class MainApp extends MultiDexApplication {
         return mAppInstance;
     }
 
+    public static AdManager adManager;
+    public static GlobalTimer globalTimer;
+
+    public static MMKV saveLoadManager;
 
     @Override
     public void onCreate() {
@@ -36,28 +35,20 @@ public class MainApp extends MultiDexApplication {
         mAppInstance = this;
         context = this;
         initHydraSdk();
-    }
-
-    public void initHydraSdk() {
-        createNotificationChannel();
-    }
-
-
-
-
-    private void createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = getResources().getString(R.string.app_name)+"";
-            String description = getResources().getString(R.string.app_name)+""+getString(R.string.notify);
-            int importance = NotificationManager.IMPORTANCE_MAX;
-            @SuppressLint("WrongConstant") NotificationChannel channel = new NotificationChannel(getPackageName(), name, importance);
-            channel.setDescription(description);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
+        Hot.INSTANCE.initCore(this);
+        if(Hot.INSTANCE.isMainProcess(this)){
+            adManager = new AdManager(this);
+            Hot.INSTANCE.registerAppLifeCallback(this);
+            globalTimer = new GlobalTimer();
         }
     }
+
+
+    public void initHydraSdk() {
+        MMKV.initialize(this);
+        saveLoadManager =
+                MMKV.mmkvWithID("EasyVPN", MMKV.MULTI_PROCESS_MODE);
+    }
+
+
 }

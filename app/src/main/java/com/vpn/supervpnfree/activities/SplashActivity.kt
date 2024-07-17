@@ -1,84 +1,116 @@
-package com.vpn.supervpnfree.activities;
+package com.vpn.supervpnfree.activities
 
+import android.annotation.SuppressLint
+import android.content.Intent
+import android.os.Bundle
+import android.os.Handler
+import android.widget.ProgressBar
+import androidx.lifecycle.lifecycleScope
+import butterknife.ButterKnife
+import com.google.android.ump.ConsentInformation
+import com.google.android.ump.ConsentRequestParameters
+import com.google.android.ump.FormError
+import com.google.android.ump.UserMessagingPlatform
+import com.vpn.supervpnfree.MainApp
+import com.vpn.supervpnfree.Preference
+import com.vpn.supervpnfree.R
+import com.vpn.supervpnfree.activities.SplashFun.getFirebaseDataFun
+import com.vpn.supervpnfree.data.Hot
+import com.vpn.supervpnfree.data.KeyAppFun
+import com.vpn.supervpnfree.data.RetrofitClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 
-import android.Manifest;
-import android.annotation.SuppressLint;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
-import android.view.View;
-
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-
-import com.google.android.ump.ConsentForm;
-import com.google.android.ump.ConsentInformation;
-import com.google.android.ump.ConsentRequestParameters;
-import com.google.android.ump.UserMessagingPlatform;
-import com.vpn.supervpnfree.Preference;
-import com.vpn.supervpnfree.R;
-import com.vpn.supervpnfree.utils.AdsManager;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import butterknife.ButterKnife;
 
 @SuppressLint("CustomSplashScreen")
-public  class SplashActivity extends AppCompatActivity {
-    Handler handler;
-    Preference preference;
-    private final AtomicBoolean isMobileAdsInitializeCalled = new AtomicBoolean(false);
-    ConsentInformation consentInformation;
-
-
+class SplashActivity : BaseActivity() {
+    var handler: Handler? = null
+    var preference: Preference? = null
+    private val isMobileAdsInitializeCalled = AtomicBoolean(false)
+    var consentInformation: ConsentInformation? = null
+    private var startProJob:Job?=null
+     var proStart: ProgressBar? = null
     @SuppressLint("SetTextI18n")
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_splash);
-        preference = new Preference(this);
-        handler = new Handler();
-        ConsentRequestParameters params = new ConsentRequestParameters.Builder().setTagForUnderAgeOfConsent(false).build();
-        consentInformation = UserMessagingPlatform.getConsentInformation(this);
-        consentInformation.requestConsentInfoUpdate(this, params, () -> {
-            UserMessagingPlatform.loadAndShowConsentFormIfRequired(this, loadAndShowError -> {
-                if (loadAndShowError != null) {
-                }
-                if (consentInformation.canRequestAds()) {
-                    if (isMobileAdsInitializeCalled.getAndSet(true)) {
-                        return;
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_splash)
+        preference = Preference(this)
+        handler = Handler()
+        ButterKnife.bind(this)
+        proStart = findViewById(R.id.s_p)
+        initData()
+        initProgress()
+        val params = ConsentRequestParameters.Builder().setTagForUnderAgeOfConsent(false).build()
+        consentInformation = UserMessagingPlatform.getConsentInformation(this)
+        consentInformation?.requestConsentInfoUpdate(
+            this,
+            params,
+            {
+                UserMessagingPlatform.loadAndShowConsentFormIfRequired(
+                    this
+                ) { loadAndShowError: FormError? ->
+                    if (loadAndShowError != null) {
                     }
-                    AdsManager.getInstance().initAds(this);
+                    if (consentInformation?.canRequestAds() == true) {
+                        if (isMobileAdsInitializeCalled.getAndSet(true)) {
+                            return@loadAndShowConsentFormIfRequired
+                        }
+                    }
                 }
-            });
-        }, requestConsentError -> {
-        });
-        if (consentInformation.canRequestAds()) {
-            if (isMobileAdsInitializeCalled.getAndSet(true)) {
-                return;
-            }
-            AdsManager.getInstance().initAds(this);
+            },
+            { requestConsentError: FormError? -> })
+//        if (consentInformation?.canRequestAds() == true) {
+        if (isMobileAdsInitializeCalled.getAndSet(true)) {
+            return
         }
-        ButterKnife.bind(this);
 
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                startActivity(new Intent(SplashActivity.this, MainActivity.class));
-                finish();
-                AdsManager.getInstance().showInterstitialAd(SplashActivity.this);
+        getFirebaseDataFun(this) {
+            MainApp.adManager.loadAd(KeyAppFun.open_type)
+            MainApp.adManager.loadAd(KeyAppFun.cont_type)
+            MainApp.adManager.loadAd(KeyAppFun.home_type)
+            SplashFun.openOpenAd(this) {
+                cancelStartPro()
+                startActivity(Intent(this@SplashActivity, MainActivity::class.java))
+                finish()
             }
-        }, 4000);
-
-        SplashFun.INSTANCE.getFirebaseDataMeteor(this);
+        }
+//        }
+    }
+    private fun cancelStartPro(){
+        proStart?.progress = 100
+        startProJob?.cancel()
+        startProJob = null
     }
 
-    @Override
-    protected void onDestroy() {
-        handler.removeCallbacksAndMessages(null);
-        super.onDestroy();
+    private fun initData() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            preference?.let {
+                Hot.getOnlineService(it)
+                RetrofitClient.detectCountry(it)
+            }
+        }
     }
 
+    private fun initProgress(){
+        lifecycleScope.launch {
+            var proInt = 0
+            while (isActive && proInt<100){
+                proInt++
+                proStart?.progress = proInt
+                delay(140)
+            }
+            if(proInt>=100){
+                cancelStartPro()
+            }
+        }
+    }
 
+    override fun onDestroy() {
+        handler!!.removeCallbacksAndMessages(null)
+        super.onDestroy()
+    }
 }

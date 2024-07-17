@@ -10,7 +10,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -19,30 +18,38 @@ import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.vpn.supervpnfree.BuildConfig;
+import com.vpn.supervpnfree.Preference;
 import com.vpn.supervpnfree.R;
 import com.vpn.supervpnfree.adapters.LocationListAdapter;
+import com.vpn.supervpnfree.data.Hot;
+import com.vpn.supervpnfree.data.ServiceData;
 import com.vpn.supervpnfree.dialog.CountryData;
 import com.google.gson.Gson;
-import com.vpn.supervpnfree.utils.AdsManager;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import kotlin.Unit;
 
 import static com.vpn.supervpnfree.utils.BillConfig.BUNDLE;
 import static com.vpn.supervpnfree.utils.BillConfig.COUNTRY_DATA;
 
-public class ServerActivity extends AppCompatActivity {
-    private static InterstitialAd mInterstitialAd;
+import java.util.List;
+
+public class ServerActivity extends BaseActivity {
+
     @BindView(R.id.regions_recycler_view)
     RecyclerView regionsRecyclerView;
 
-    @BindView(R.id.regions_progress)
-    ProgressBar regionsProgressBar;
+    @BindView(R.id.tv_no_data)
+    TextView regionsProgressBar;
 
     private LocationListAdapter regionAdapter;
-    private RegionChooserInterface regionChooserInterface;
     ImageView backToActivity;
     TextView activity_name;
+
+    List<ServiceData> allListData;
+
+    Preference preference;
 
     @SuppressLint("SetTextI18n")
     @Override
@@ -50,54 +57,26 @@ public class ServerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_server);
         ButterKnife.bind(this);
-        LoadBannerAd();
         LoadInterstitialAd();
         activity_name = findViewById(R.id.activity_name);
         backToActivity = findViewById(R.id.finish_activity);
         activity_name.setText("Select Country/Region");
         backToActivity.setOnClickListener(view -> finish());
-        regionChooserInterface = item -> {
-            if (!item.isPro()) {
-                Intent intent = new Intent(ServerActivity.this,MainActivity.class);
-                Bundle args = new Bundle();
-                Gson gson = new Gson();
-                String json = gson.toJson(item);
-                args.putString(COUNTRY_DATA, json);
-                intent.putExtra(BUNDLE, args);
-                startActivity(intent);
-                finish();
-                showInterstial();
-
-            }
-        };
-
+        preference = new Preference(this);
+        loadData();
         regionsRecyclerView.setHasFixedSize(true);
         regionsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        regionAdapter = new LocationListAdapter(item -> regionChooserInterface.onRegionSelected(item), ServerActivity.this);
+        regionAdapter = new LocationListAdapter(this, allListData);
         regionsRecyclerView.setAdapter(regionAdapter);
-        loadServers();
     }
 
-    private void loadServers() {
-        showProgress();
-//        UnifiedSdk.getInstance().getBackend().countries(new Callback<AvailableCountries>() {
-//            @Override
-//            public void success(@NonNull final AvailableCountries countries) {
-//                hideProress();
-//                regionAdapter.setRegions(countries.getCountries());
-//            }
-//
-//            @Override
-//            public void failure(@NonNull VpnException e) {
-//                hideProress();
-//            }
-//        });
-    }
 
-    public void LoadBannerAd() {
-        RelativeLayout adContainer = findViewById(R.id.adView);
-        if (BuildConfig.GOOGlE_AD) {
-            AdsManager.getInstance().loadcustomnative(ServerActivity.this, adContainer);
+    public void loadData() {
+        if (Hot.INSTANCE.isHaveVpnData(preference, null,() -> Unit.INSTANCE)) {
+            allListData = Hot.INSTANCE.getAllData(preference);
+            hideProress();
+        } else {
+            showProgress();
         }
     }
 
@@ -112,30 +91,8 @@ public class ServerActivity extends AppCompatActivity {
     }
 
     private void LoadInterstitialAd() {
-        if (BuildConfig.GOOGlE_AD) {
-            AdRequest adRequest = new AdRequest.Builder().build();
-            InterstitialAd.load(this, (BuildConfig.GOOGLE_INTERSTITIAL), adRequest, new InterstitialAdLoadCallback() {
-                @Override
-                public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
-                    mInterstitialAd = interstitialAd;
-                }
 
-                @Override
-                public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                    mInterstitialAd = null;
-                }
-            });
-
-        }
     }
-
-
-    public void showInterstial() {
-        if (mInterstitialAd != null) {
-            mInterstitialAd.show(ServerActivity.this);
-        }
-    }
-
     @Override
     public boolean onSupportNavigateUp() {
         onBackPressed();

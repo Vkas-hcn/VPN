@@ -218,9 +218,9 @@ class AdManager(private val application: Application) {
                             if (adType == KeyAppFun.cont_type) {
                                 loadAd(adType)
                             }
-//                            if(isAppInForeground(activity)){
+                            if(isAppInForeground(activity)){
                                 nextFun()
-//                            }
+                            }
                         }
 
                         override fun onAdClicked() {
@@ -306,7 +306,7 @@ class AdManager(private val application: Application) {
         preference.setIntpreference(KeyAppFun.ad_show_nums, showNum)
     }
 
-    private fun isAppInForeground(activity: Activity): Boolean {
+     fun isAppInForeground(activity: Activity): Boolean {
         val activityManager =
             activity.getSystemService(Activity.ACTIVITY_SERVICE) as android.app.ActivityManager
         val runningAppProcesses = activityManager.runningAppProcesses ?: return false

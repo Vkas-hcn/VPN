@@ -8,6 +8,7 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.core.view.isVisible
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import butterknife.ButterKnife
 import com.google.android.ump.ConsentInformation
@@ -22,6 +23,7 @@ import com.vpn.supervpnfree.data.Hot
 import com.vpn.supervpnfree.data.KeyAppFun
 import com.vpn.supervpnfree.data.RetrofitClient
 import com.vpn.supervpnfree.data.VpnStateData
+import com.vpn.supervpnfree.utils.AdManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -39,6 +41,7 @@ class SplashActivity : BaseActivity() {
     var consentInformation: ConsentInformation? = null
     private var startProJob: Job? = null
     var proStart: ProgressBar? = null
+    var jumpToMain = MutableLiveData(false)
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,8 +84,10 @@ class SplashActivity : BaseActivity() {
             MainApp.adManager.loadAd(KeyAppFun.home_type)
             SplashFun.openOpenAd(this) {
                 cancelStartPro()
-                startActivity(Intent(this@SplashActivity, MainActivity::class.java))
-                finish()
+                if(MainApp.adManager.isAppInForeground(this)){
+                    startActivity(Intent(this@SplashActivity, MainActivity::class.java))
+                    finish()
+                }
             }
         }
 //        }
@@ -97,11 +102,18 @@ class SplashActivity : BaseActivity() {
     }
 
     private fun initData() {
+        SplashFun.adShown = false
         lifecycleScope.launch(Dispatchers.IO) {
             preference?.let {
                 Hot.getOnlineService(it)
                 RetrofitClient.detectCountry(it)
                 RetrofitClient.getBlackData(this@SplashActivity, it)
+            }
+        }
+        jumpToMain.observe(this) {
+            if (it) {
+                startActivity(Intent(this@SplashActivity, MainActivity::class.java))
+                finish()
             }
         }
     }

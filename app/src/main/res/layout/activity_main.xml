@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent">
+
         <ImageView
             android:id="@+id/firstlayout"
             android:layout_width="match_parent"
@@ -268,14 +272,15 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="3dp" />
         </LinearLayout>
+
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/ad_layout"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="66dp"
             android:layout_margin="12dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/ll_info"
-            app:layout_constraintStart_toStartOf="parent">
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/ll_info">
 
             <ImageView
                 android:id="@+id/img_oc_ad"
@@ -283,8 +288,8 @@
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
                 android:scaleType="fitXY"
-                android:visibility="gone"
-                android:src="@drawable/ic__main_oc" />
+                android:src="@drawable/ic__main_oc"
+                android:visibility="gone" />
 
             <FrameLayout
                 android:id="@+id/ad_layout_admob"
@@ -396,8 +401,8 @@
             android:id="@+id/con_loading"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="gone"
-            android:gravity="center">
+            android:gravity="center"
+            android:visibility="gone">
 
             <View
                 android:layout_width="match_parent"
@@ -417,5 +422,6 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-</ScrollView>
+
+</androidx.core.widget.NestedScrollView>
 

@@ -29,7 +29,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MANIFEST
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_NONE
 import android.os.Build
 import android.os.PowerManager
 import android.text.format.Formatter
@@ -97,7 +101,7 @@ class ServiceNotification(
     }
     private var callbackRegistered = false
 
-    private val builder = NotificationCompat.Builder(service as Context, channel)
+    val builder = NotificationCompat.Builder(service as Context, channel)
         .setWhen(0)
         .setColor(ContextCompat.getColor(service, R.color.ic_launcher_background))
         .setTicker(service.getString(R.string.forward_success))
@@ -148,30 +152,15 @@ class ServiceNotification(
 
     private fun show() {
 
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
-            Log.e("TAG", "show: 111111", )
-            if (ActivityCompat.checkSelfPermission(
-                    Core.app,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(
-                    Core.app,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                (service as Service).startForeground(
-                    1,
-                    builder.build(),
-                    FOREGROUND_SERVICE_TYPE_LOCATION
-                )
-            } else {
-                Log.e(
-                    "MyService",
-                    "No permissions ACCESS_FINE_LOCATION and ACCESS_COARSE_LOCATION!"
-                )
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Log.e("TAG", "show: 111111")
+            (service as Service).startForeground(
+                1,
+                builder.build(),
+                FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            )
         } else {
-            Log.e("TAG", "show: 22222222", )
+            Log.e("TAG", "show: 22222222")
             (service as Service).startForeground(1, builder.build())
         }
     }

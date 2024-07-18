@@ -19,6 +19,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 object SplashFun {
+    var adShown = false // Flag to indicate if the ad has been shown
+
     fun getFirebaseDataFun(context: Context, loadAdFun: () -> Unit) {
         val handler = Handler(Looper.getMainLooper())
         var isCa = false
@@ -66,7 +68,6 @@ object SplashFun {
     fun openOpenAd(activity: Activity, jumpFun: () -> Unit) {
         val handler = Handler(Looper.getMainLooper())
         var attemptCount = 0
-        var adShown = false // Flag to indicate if the ad has been shown
         if (MainApp.adManager.canShowAd(KeyAppFun.open_type) == KeyAppFun.ad_jump_over) {
             jumpFun()
             return
@@ -83,7 +84,7 @@ object SplashFun {
                     Log.e("TAG", "等待OPEN广告超时。。。 ", )
                     jumpFun()
                 }
-                Log.e("TAG", "等待OPEN广告中。。。 ", )
+//                Log.e("TAG", "等待OPEN广告中。。。 ", )
                 if(MainApp.adManager.canShowAd(KeyAppFun.open_type) == KeyAppFun.ad_show){
                     adShown = true
                     MainApp.adManager.showAd(KeyAppFun.open_type,activity){

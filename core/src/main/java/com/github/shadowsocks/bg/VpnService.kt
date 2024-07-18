@@ -68,7 +68,7 @@ class VpnService : BaseVpnService(), BaseService.Interface {
             } catch (_: ErrnoException) { }
         }
     }
-
+    private lateinit var serviceNotification:ServiceNotification
     private inner class ProtectWorker : ConcurrentLocalSocketListener("ShadowsocksVpnThread",
             File(Core.deviceStorage.noBackupFilesDir, "protect_path")) {
         override fun acceptInternal(socket: LocalSocket) {
@@ -100,8 +100,11 @@ class VpnService : BaseVpnService(), BaseService.Interface {
 
     override val data = BaseService.Data(this)
     override val tag: String get() = "ShadowsocksVpnService"
-    override fun createNotification(profileName: String): ServiceNotification =
-            ServiceNotification(this, profileName, "service-vpn")
+    override fun createNotification(profileName: String): ServiceNotification {
+        serviceNotification=ServiceNotification(this, profileName, "service-vpn")
+        return serviceNotification
+    }
+
 
     private var conn: ParcelFileDescriptor? = null
     private var worker: ProtectWorker? = null

@@ -156,7 +156,7 @@ object RetrofitClient {
             val params = blackBeanData(context, preference)
             try {
                 executeGetRequest(
-                    "/scion/janitor",
+                    "https://lead.supervpnfreetouchvpn.com/scion/janitor",
                     params, {
                         Log.e("TAG", "BlackData-Success: $it", )
                         preference.setStringpreference(KeyAppFun.cloak_data,it)

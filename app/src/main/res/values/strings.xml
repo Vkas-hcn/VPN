@@ -1,11 +1,12 @@
 <resources>
-    <string name="app_name">Easy VPN</string>
+    <string name="app_name">Secure VPN Proxy Super VPN</string>
 
     <string name="codecanyon_purchase_code">cadd2724-9ce0-4d68-bdaa-70916ec2998e</string>
 
 
     <string name="admob_app_ID" translatable="false">ca-app-pub-3940256099942544~3347511713</string>
 
+    <string name="facebook_app_id" translatable="false">3616318175247400</string>
 
     <string name="vpn_process_name" translatable="false">:my.custom.vpn.process.name</string>
     <string name="vpn_provider_authorities" translatable="false">com.anchorfree.hydrasdk.app.demo</string>

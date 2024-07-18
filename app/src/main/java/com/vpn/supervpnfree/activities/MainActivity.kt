@@ -1,28 +1,38 @@
 package com.vpn.supervpnfree.activities
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Process
 import android.os.RemoteException
 import android.os.SystemClock
+import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.addCallback
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceDataStore
+import com.blankj.utilcode.util.ActivityUtils
+import com.github.shadowsocks.Core
 import com.github.shadowsocks.aidl.IShadowsocksService
 import com.github.shadowsocks.aidl.TrafficStats
 import com.github.shadowsocks.bg.BaseService
 import com.github.shadowsocks.utils.Key
+import com.google.android.material.snackbar.Snackbar
 import com.vpn.supervpnfree.MainApp
 import com.vpn.supervpnfree.MainApp.globalTimer
 import com.vpn.supervpnfree.R
@@ -45,13 +55,14 @@ import kotlin.system.exitProcess
 class MainActivity : UIActivity() {
     var vpnCODJob: Job? = null
     var vpnStateMi = VpnStateData.DISCONNECTED
-    private val endPageLiveData: MutableLiveData<Boolean> =
-        MutableLiveData(false)
+    private val endPageLiveData: MutableLiveData<Boolean> = MutableLiveData(false)
     private lateinit var imageRotator: ImageRotator
     private var handle: Handler = Handler()
     private val TAG = "MainActivity"
     private var speedJob: Job? = null
     private var jobMainJdo: Job? = null
+    var adShown = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         liveVpnState()
@@ -61,15 +72,39 @@ class MainActivity : UIActivity() {
         showDueDialog()
         setVpnPer(this) {
             if (showDueDialog()) return@setVpnPer
-            clickButTOVpn()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) requestNotificationPermissionLauncher.launch(
+                Manifest.permission.POST_NOTIFICATIONS
+            )
+            else clickButTOVpn()
+
         }
         MainApp.saveLoadManager.encode(
-            KeyAppFun.easy_vpn_flow_data,
-            AdUtils.getIsOrNotRl(preference)
+            KeyAppFun.easy_vpn_flow_data, AdUtils.getIsOrNotRl(preference)
         )
-        if(clickGuide){
+        if (clickGuide) {
             cloneGuide()
         }
+        view_guide_1.setOnClickListener {  }
+    }
+
+
+    private val requestNotificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                clickButTOVpn()
+            } else {
+                Snackbar.make(findViewById(R.id.main_layout), "Notification permission denied. Please enable it in settings.", Snackbar.LENGTH_LONG)
+                    .setAction("Settings") {
+                        openAppSettings()
+                    }
+                    .show()
+            }
+        }
+    private fun openAppSettings() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", packageName, null)
+        }
+        startActivity(intent)
     }
 
     private fun backFun() {
@@ -120,6 +155,8 @@ class MainActivity : UIActivity() {
             initVpnSet()
         }
         currentServerBtn.setOnClickListener {
+            Log.e(TAG, "initVpnSet: ${vpnStateMi}")
+
             if (vpnStateMi == VpnStateData.CONNECTING) {
                 return@setOnClickListener
             }
@@ -141,8 +178,7 @@ class MainActivity : UIActivity() {
             }
             startActivity(
                 Intent(
-                    "android.intent.action.VIEW",
-                    Uri.parse("https://maxisoftapps.blogspot.com/")
+                    "android.intent.action.VIEW", Uri.parse("https://maxisoftapps.blogspot.com/")
                 )
             )
         }
@@ -153,6 +189,7 @@ class MainActivity : UIActivity() {
     private var lastExecutionTime: Long = 0
 
     private fun initVpnSet() {
+        Log.e(TAG, "initVpnSet: ${vpnStateMi}")
         val currentTime = SystemClock.elapsedRealtime()
         if (currentTime - lastExecutionTime < 2000) {
             return
@@ -176,6 +213,7 @@ class MainActivity : UIActivity() {
     private fun cancelCOD() {
         vpnCODJob?.cancel()
         vpnCODJob = null
+        adShown = true
     }
 
     private fun clickButTOVpn() {
@@ -248,7 +286,8 @@ class MainActivity : UIActivity() {
         alertDialog.setMessage("Are you sure you want to leave the application?")
         alertDialog.setIcon(R.mipmap.ic_launcher)
         alertDialog.setPositiveButton("YES") { dialog: DialogInterface?, which: Int ->
-            moveTaskToBack(true)
+            Core.stopService()
+            ActivityUtils.finishAllActivities()
             Process.killProcess(Process.myPid())
             exitProcess(0)
         }
@@ -257,41 +296,43 @@ class MainActivity : UIActivity() {
     }
 
     private fun setVpnState(state: String?) {
-
-        when (state) {
-            "Connected" -> {
-                Log.e(TAG, "VPN连接成功=${vpnStateMi}" )
-                setVpnStateData(VpnStateData.CONNECTED)
-                if (vpnStateMi == VpnStateData.CONNECTING) {
-                    showConnectAd {
-                        updateUI(Hot.vpnStateHotData)
-                        endPageLiveData.postValue(true)
+        lifecycleScope.launch {
+            when (state) {
+                "Connected" -> {
+                    Log.e(TAG, "VPN连接成功=${vpnStateMi}")
+                    setVpnStateData(VpnStateData.CONNECTED)
+                    if (vpnStateMi == VpnStateData.CONNECTING) {
+                        showConnectAd {
+                            lifecycleScope.launch {
+                                endPageLiveData.postValue(true)
+                                delay(300)
+                                updateUI(Hot.vpnStateHotData)
+                            }
+                        }
+                        MainApp.adManager.loadAd(KeyAppFun.list_type)
+                        MainApp.adManager.loadAd(KeyAppFun.result_type)
                     }
-                    MainApp.adManager.loadAd(KeyAppFun.list_type)
-                    MainApp.adManager.loadAd(KeyAppFun.result_type)
                 }
-                vpnStateMi = Hot.vpnStateHotData
-            }
 
-            "Connecting" -> {
-                Log.e(TAG, "VPN连接中" )
-                setVpnStateData(VpnStateData.CONNECTING)
-                updateUI(Hot.vpnStateHotData)
-            }
-
-            "Stopping" -> {
-                Log.e(TAG, "VPN断开中" )
-                setVpnStateData(VpnStateData.DISCONNECTING)
-                updateUI(Hot.vpnStateHotData)
-            }
-
-            "Stopped" -> {
-                Log.e(TAG, "VPN断开=${vpnStateMi}" )
-                setVpnStateData(VpnStateData.DISCONNECTED)
-                if (vpnStateMi == VpnStateData.DISCONNECTING) {
-                    endPageLiveData.postValue(true)
+                "Connecting" -> {
+                    Log.e(TAG, "VPN连接中")
+                    setVpnStateData(VpnStateData.CONNECTING)
                 }
-                updateUI(Hot.vpnStateHotData)
+
+                "Stopping" -> {
+                    Log.e(TAG, "VPN断开中")
+                    setVpnStateData(VpnStateData.DISCONNECTING)
+                }
+
+                "Stopped" -> {
+                    Log.e(TAG, "VPN断开=${vpnStateMi}")
+                    setVpnStateData(VpnStateData.DISCONNECTED)
+                    if (vpnStateMi == VpnStateData.DISCONNECTING) {
+                        endPageLiveData.postValue(true)
+                        delay(300)
+                    }
+                    updateUI(Hot.vpnStateHotData)
+                }
             }
         }
 
@@ -317,11 +358,11 @@ class MainActivity : UIActivity() {
     private fun showConnectAd(jumpFun: () -> Unit) {
         val handler = Handler(Looper.getMainLooper())
         var attemptCount = 0
-        var adShown = false
         if (MainApp.adManager.canShowAd(KeyAppFun.cont_type) == KeyAppFun.ad_jump_over) {
             jumpFun()
             return
         }
+        adShown = false
         MainApp.adManager.loadAd(KeyAppFun.cont_type)
         val checkConditionAndPreloadAd = object : Runnable {
             override fun run() {
@@ -356,7 +397,7 @@ class MainActivity : UIActivity() {
     private fun cloneGuide() {
         lav_guide.visibility = View.GONE
         view_guide_1.visibility = View.GONE
-        clickGuide =true
+        clickGuide = true
     }
 
     override fun stateChanged(state: BaseService.State, profileName: String?, msg: String?) {
@@ -450,12 +491,10 @@ class MainActivity : UIActivity() {
             while (Hot.vpnStateHotData == VpnStateData.CONNECTED) {
                 delay(1000)
                 uploading_speed_textview.text = MainApp.saveLoadManager.getString(
-                    "easy_up_num",
-                    "0"
+                    "easy_up_num", "0"
                 ) + MainApp.saveLoadManager.getString("easy_up_unit", "B/s")
                 downloading_speed_textview.text = MainApp.saveLoadManager.getString(
-                    "easy_dow_num",
-                    "0"
+                    "easy_dow_num", "0"
                 ) + MainApp.saveLoadManager.getString("easy_dow_unit", "B/s")
             }
         }
@@ -479,8 +518,7 @@ class MainActivity : UIActivity() {
             delay(300)
             while (isActive) {
                 if (MainApp.adManager.canShowAd(KeyAppFun.home_type) == KeyAppFun.ad_show) {
-                    MainApp.adManager.showAd(KeyAppFun.home_type, this@MainActivity) {
-                    }
+                    MainApp.adManager.showAd(KeyAppFun.home_type, this@MainActivity) {}
                     jobMainJdo?.cancel()
                     jobMainJdo = null
                     break

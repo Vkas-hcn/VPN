@@ -176,6 +176,7 @@ object Core : Configuration.Provider {
     }
 
     fun startService() = ContextCompat.startForegroundService(app, Intent(app, ShadowsocksConnection.serviceClass))
+
     fun reloadService() = app.sendBroadcast(Intent(Action.RELOAD).setPackage(app.packageName))
     fun stopService() = try {
         app.sendBroadcast(Intent(Action.CLOSE).setPackage(app.packageName))

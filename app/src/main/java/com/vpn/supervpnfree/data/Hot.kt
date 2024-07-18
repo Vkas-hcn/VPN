@@ -335,6 +335,7 @@ object Hot {
 
         val alertDialog = alertDialogBuilder.create()
         alertDialog.setCanceledOnTouchOutside(false)
+        alertDialog.setCancelable(false)
         alertDialog.setOnKeyListener { _, keyCode, event ->
             return@setOnKeyListener keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP
         }

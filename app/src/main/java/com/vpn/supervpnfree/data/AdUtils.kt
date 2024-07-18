@@ -117,7 +117,7 @@ object AdUtils {
     fun getAdBlackData(preference: Preference): Boolean {
         return when (getLjData(preference).ccc_kk) {
             "1" -> {
-                preference.getStringpreference(KeyAppFun.cloak_data) == "steen"
+                preference.getStringpreference(KeyAppFun.cloak_data) != "grady"
             }
 
             "2" -> {
@@ -125,7 +125,7 @@ object AdUtils {
             }
 
             else -> {
-                preference.getStringpreference(KeyAppFun.cloak_data) == "steen"
+                preference.getStringpreference(KeyAppFun.cloak_data) != "grady"
             }
         }
     }

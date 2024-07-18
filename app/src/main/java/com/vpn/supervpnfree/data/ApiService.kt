@@ -1,8 +1,10 @@
 package com.vpn.supervpnfree.data
 
+import androidx.annotation.Keep
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Headers
+import retrofit2.http.QueryMap
 import retrofit2.http.Url
 
 interface ApiService {
@@ -18,13 +20,19 @@ interface ApiService {
     @GET("/")
     fun getIpInfo(): Call<InfoIpResponse>
 
+    @GET
+    fun getMapRequest(
+        @Url url: String,
+        @QueryMap(encoded = true) map: Map<String, @JvmSuppressWildcards Any>
+    ): Call<String>
 }
+@Keep
 data class MyIpResponse(
     val ip: String,
     val country: String,
     val cc: String
 )
-
+@Keep
 data class InfoIpResponse(
     val ip: String,
     val city: String,

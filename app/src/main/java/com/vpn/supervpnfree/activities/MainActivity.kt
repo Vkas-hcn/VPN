@@ -9,6 +9,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Process
 import android.os.RemoteException
+import android.os.SystemClock
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -25,7 +26,9 @@ import com.github.shadowsocks.utils.Key
 import com.vpn.supervpnfree.MainApp
 import com.vpn.supervpnfree.MainApp.globalTimer
 import com.vpn.supervpnfree.R
+import com.vpn.supervpnfree.data.AdUtils
 import com.vpn.supervpnfree.data.Hot
+import com.vpn.supervpnfree.data.Hot.clickGuide
 import com.vpn.supervpnfree.data.Hot.isHaveVpnData
 import com.vpn.supervpnfree.data.Hot.setVpnPer
 import com.vpn.supervpnfree.data.Hot.setVpnStateData
@@ -35,7 +38,9 @@ import com.vpn.supervpnfree.data.VpnStateData
 import com.vpn.supervpnfree.utils.ImageRotator
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.system.exitProcess
 
 class MainActivity : UIActivity() {
     var vpnCODJob: Job? = null
@@ -46,14 +51,31 @@ class MainActivity : UIActivity() {
     private var handle: Handler = Handler()
     private val TAG = "MainActivity"
     private var speedJob: Job? = null
+    private var jobMainJdo: Job? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         liveVpnState()
         imageRotator = ImageRotator()
+        backFun()
+        showHomeAd()
+        showDueDialog()
+        setVpnPer(this) {
+            if (showDueDialog()) return@setVpnPer
+            clickButTOVpn()
+        }
+        MainApp.saveLoadManager.encode(
+            KeyAppFun.easy_vpn_flow_data,
+            AdUtils.getIsOrNotRl(preference)
+        )
+        if(clickGuide){
+            cloneGuide()
+        }
+    }
+
+    private fun backFun() {
         onBackPressedDispatcher.addCallback(this) {
             if (lav_guide.isVisible) {
-                lav_guide.visibility = View.GONE
-                view_guide_1.visibility = View.GONE
+                cloneGuide()
                 return@addCallback
             }
             if (vpnStateMi == VpnStateData.DISCONNECTING) {
@@ -70,22 +92,17 @@ class MainActivity : UIActivity() {
             }
             onBackPressedFun()
         }
-        showDueDialog()
-        setVpnPer(this) {
-            if (showDueDialog()) return@setVpnPer
-            clickButTOVpn()
-        }
     }
 
     private fun showDueDialog(): Boolean {
-        if (RetrofitClient.shouldBlockAccess(preference)) {
-            Hot.illegalUserDialog(this) {
-                moveTaskToBack(true)
-                Process.killProcess(Process.myPid())
-                finish()
-            }
-            return true
-        }
+//        if (RetrofitClient.shouldBlockAccess(preference)) {
+//            Hot.illegalUserDialog(this) {
+//                moveTaskToBack(true)
+//                Process.killProcess(Process.myPid())
+//                finish()
+//            }
+//            return true
+//        }
         return false
     }
 
@@ -133,7 +150,15 @@ class MainActivity : UIActivity() {
 
     }
 
+    private var lastExecutionTime: Long = 0
+
     private fun initVpnSet() {
+        val currentTime = SystemClock.elapsedRealtime()
+        if (currentTime - lastExecutionTime < 2000) {
+            return
+        }
+        lastExecutionTime = currentTime
+
         if (vpnStateMi == VpnStateData.CONNECTING) {
             return
         }
@@ -142,8 +167,7 @@ class MainActivity : UIActivity() {
             return
         }
         RetrofitClient.detectCountry(preference)
-        lav_guide.visibility = View.GONE
-        view_guide_1.visibility = View.GONE
+        cloneGuide()
         if (isHaveVpnData(preference, con_loading) {}) {
             Hot.connect.launch(null)
         }
@@ -165,6 +189,8 @@ class MainActivity : UIActivity() {
                 startVpnProcess()
             }
             if (Hot.vpnStateHotData == VpnStateData.CONNECTED) {
+                MainApp.adManager.loadAd(KeyAppFun.list_type)
+                MainApp.adManager.loadAd(KeyAppFun.result_type)
                 updateUI(VpnStateData.DISCONNECTING)
                 delay(2000)
                 showConnectAd {
@@ -176,6 +202,12 @@ class MainActivity : UIActivity() {
 
     override fun onStop() {
         super.onStop()
+        if (vpnStateMi == VpnStateData.CONNECTING && Hot.vpnStateHotData != VpnStateData.CONNECTED) {
+            stopDisConnectFun()
+        }
+        if (vpnStateMi == VpnStateData.DISCONNECTING && Hot.vpnStateHotData != VpnStateData.DISCONNECTED) {
+            stopDisConnectFun()
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -218,7 +250,7 @@ class MainActivity : UIActivity() {
         alertDialog.setPositiveButton("YES") { dialog: DialogInterface?, which: Int ->
             moveTaskToBack(true)
             Process.killProcess(Process.myPid())
-            finish()
+            exitProcess(0)
         }
         alertDialog.setNegativeButton("NO", null)
         alertDialog.show()
@@ -228,27 +260,33 @@ class MainActivity : UIActivity() {
 
         when (state) {
             "Connected" -> {
+                Log.e(TAG, "VPN连接成功=${vpnStateMi}" )
                 setVpnStateData(VpnStateData.CONNECTED)
                 if (vpnStateMi == VpnStateData.CONNECTING) {
                     showConnectAd {
                         updateUI(Hot.vpnStateHotData)
                         endPageLiveData.postValue(true)
                     }
+                    MainApp.adManager.loadAd(KeyAppFun.list_type)
+                    MainApp.adManager.loadAd(KeyAppFun.result_type)
                 }
                 vpnStateMi = Hot.vpnStateHotData
             }
 
             "Connecting" -> {
+                Log.e(TAG, "VPN连接中" )
                 setVpnStateData(VpnStateData.CONNECTING)
                 updateUI(Hot.vpnStateHotData)
             }
 
             "Stopping" -> {
+                Log.e(TAG, "VPN断开中" )
                 setVpnStateData(VpnStateData.DISCONNECTING)
                 updateUI(Hot.vpnStateHotData)
             }
 
             "Stopped" -> {
+                Log.e(TAG, "VPN断开=${vpnStateMi}" )
                 setVpnStateData(VpnStateData.DISCONNECTED)
                 if (vpnStateMi == VpnStateData.DISCONNECTING) {
                     endPageLiveData.postValue(true)
@@ -282,6 +320,7 @@ class MainActivity : UIActivity() {
         var adShown = false
         if (MainApp.adManager.canShowAd(KeyAppFun.cont_type) == KeyAppFun.ad_jump_over) {
             jumpFun()
+            return
         }
         MainApp.adManager.loadAd(KeyAppFun.cont_type)
         val checkConditionAndPreloadAd = object : Runnable {
@@ -306,6 +345,20 @@ class MainActivity : UIActivity() {
         handler.postDelayed(checkConditionAndPreloadAd, 500)
     }
 
+    //同步UI
+    private fun syncUiFun(vpnStateData: String) {
+        if (vpnStateData == "Connected") {
+            cloneGuide()
+            updateUI(VpnStateData.CONNECTED)
+        }
+    }
+
+    private fun cloneGuide() {
+        lav_guide.visibility = View.GONE
+        view_guide_1.visibility = View.GONE
+        clickGuide =true
+    }
+
     override fun stateChanged(state: BaseService.State, profileName: String?, msg: String?) {
         Log.e(TAG, "stateChanged: " + state.name)
         setVpnState(state.name)
@@ -316,6 +369,7 @@ class MainActivity : UIActivity() {
             val state = BaseService.State.values()[service.state]
             Log.e(TAG, "onServiceConnected: " + state.name)
             setVpnState(state.name)
+            syncUiFun(state.name)
         } catch (e: RemoteException) {
             throw RuntimeException(e)
         }
@@ -403,6 +457,35 @@ class MainActivity : UIActivity() {
                     "easy_dow_num",
                     "0"
                 ) + MainApp.saveLoadManager.getString("easy_dow_unit", "B/s")
+            }
+        }
+    }
+
+
+    private fun showHomeAd() {
+        jobMainJdo?.cancel()
+        jobMainJdo = null
+        if (AdUtils.getAdBlackData(preference)) {
+            ad_layout.isVisible = false
+            return
+        }
+        ad_layout.isVisible = true
+        if (MainApp.adManager.canShowAd(KeyAppFun.home_type) == KeyAppFun.ad_jump_over) {
+            img_oc_ad.isVisible = true
+            ad_layout_admob.isVisible = false
+            return
+        }
+        jobMainJdo = lifecycleScope.launch {
+            delay(300)
+            while (isActive) {
+                if (MainApp.adManager.canShowAd(KeyAppFun.home_type) == KeyAppFun.ad_show) {
+                    MainApp.adManager.showAd(KeyAppFun.home_type, this@MainActivity) {
+                    }
+                    jobMainJdo?.cancel()
+                    jobMainJdo = null
+                    break
+                }
+                delay(500L)
             }
         }
     }

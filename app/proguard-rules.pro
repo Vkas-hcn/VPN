@@ -80,3 +80,10 @@
 
 ##anjlab
 -keep class com.android.vending.billing.**
+
+-optimizationpasses 5
+-dontskipnonpubliclibraryclassmembers
+-optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
+-obfuscationdictionary proguard-easy.txt
+-classobfuscationdictionary proguard-easy.txt
+-packageobfuscationdictionary proguard-easy.txt

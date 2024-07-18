@@ -5,6 +5,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.widget.ProgressBar
+import android.widget.Toast
+import androidx.activity.addCallback
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import butterknife.ButterKnife
 import com.google.android.ump.ConsentInformation
@@ -18,11 +21,13 @@ import com.vpn.supervpnfree.activities.SplashFun.getFirebaseDataFun
 import com.vpn.supervpnfree.data.Hot
 import com.vpn.supervpnfree.data.KeyAppFun
 import com.vpn.supervpnfree.data.RetrofitClient
+import com.vpn.supervpnfree.data.VpnStateData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 
 
@@ -32,8 +37,9 @@ class SplashActivity : BaseActivity() {
     var preference: Preference? = null
     private val isMobileAdsInitializeCalled = AtomicBoolean(false)
     var consentInformation: ConsentInformation? = null
-    private var startProJob:Job?=null
-     var proStart: ProgressBar? = null
+    private var startProJob: Job? = null
+    var proStart: ProgressBar? = null
+
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,6 +48,7 @@ class SplashActivity : BaseActivity() {
         handler = Handler()
         ButterKnife.bind(this)
         proStart = findViewById(R.id.s_p)
+        getUUID()
         initData()
         initProgress()
         val params = ConsentRequestParameters.Builder().setTagForUnderAgeOfConsent(false).build()
@@ -79,8 +86,11 @@ class SplashActivity : BaseActivity() {
             }
         }
 //        }
+        onBackPressedDispatcher.addCallback(this) {
+        }
     }
-    private fun cancelStartPro(){
+
+    private fun cancelStartPro() {
         proStart?.progress = 100
         startProJob?.cancel()
         startProJob = null
@@ -91,19 +101,26 @@ class SplashActivity : BaseActivity() {
             preference?.let {
                 Hot.getOnlineService(it)
                 RetrofitClient.detectCountry(it)
+                RetrofitClient.getBlackData(this@SplashActivity, it)
             }
         }
     }
 
-    private fun initProgress(){
+    private fun getUUID() {
+        if (preference?.getStringpreference(KeyAppFun.uuid_easy_data, "").isNullOrEmpty()) {
+            preference?.setStringpreference(KeyAppFun.uuid_easy_data, UUID.randomUUID().toString())
+        }
+    }
+
+    private fun initProgress() {
         lifecycleScope.launch {
             var proInt = 0
-            while (isActive && proInt<100){
+            while (isActive && proInt < 100) {
                 proInt++
                 proStart?.progress = proInt
                 delay(140)
             }
-            if(proInt>=100){
+            if (proInt >= 100) {
                 cancelStartPro()
             }
         }

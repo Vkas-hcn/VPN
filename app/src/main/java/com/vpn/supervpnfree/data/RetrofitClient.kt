@@ -1,7 +1,16 @@
 package com.vpn.supervpnfree.data
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
+import android.provider.Settings
+import android.util.Log
 import com.vpn.supervpnfree.Preference
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.Call
@@ -20,6 +29,18 @@ object RetrofitClient {
             .baseUrl("https://test.supervpnfreetouchvpn.com") // Base URL can be anything since we use @Url in the service
             .addConverterFactory(ScalarsConverterFactory.create())
             .build()
+    }
+    private const val BASE_URL_Clock =
+        "https://lead.supervpnfreetouchvpn.com" // Replace with your base URL
+    private val retrofitClock: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL_Clock)
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .build()
+    }
+
+    val apiServiceClock: ApiService by lazy {
+        retrofitClock.create(ApiService::class.java)
     }
 
     val apiService: ApiService by lazy {
@@ -129,4 +150,63 @@ object RetrofitClient {
         })
     }
 
+     fun getBlackData(context: Context, preference: Preference) {
+        val localClock = preference.getStringpreference(KeyAppFun.cloak_data)
+        if (localClock.isBlank()) {
+            val params = blackBeanData(context, preference)
+            try {
+                executeGetRequest(
+                    "/scion/janitor",
+                    params, {
+                        Log.e("TAG", "BlackData-Success: $it", )
+                        preference.setStringpreference(KeyAppFun.cloak_data,it)
+                    }, {
+                        Log.e("TAG", "BlackData-onFailure: $it" )
+                        scheduleRetry(context,preference)
+                    })
+            } catch (e: Exception) {
+                scheduleRetry(context,preference)
+            }
+        }
+    }
+
+    private fun scheduleRetry(context: Context,preference: Preference) {
+        GlobalScope.launch(Dispatchers.IO) {
+            delay(10000)
+            getBlackData(context,preference)
+        }
+    }
+
+    @SuppressLint("HardwareIds")
+    fun blackBeanData(context: Context, preference: Preference): Map<String, Any> {
+        return mapOf(
+            "barbaric" to "com.vpn.supervpnfree.touchvpn.openvpn.fastvpn.freevpn.unblock.proxy.easyvpn",
+            "phonic" to "korea",
+            "tenspot" to context.packageManager.getPackageInfo(context.packageName, 0).versionName,
+            "neigh" to preference.getStringpreference(KeyAppFun.uuid_easy_data, ""),
+        )
+    }
+
+    fun executeGetRequest(
+        url: String,
+        map: Map<String, Any>,
+        successFun: (String) -> Unit,
+        errorFun: (String) -> Unit
+    ) {
+        val call = apiServiceClock.getMapRequest(url, map)
+        call.enqueue(object : Callback<String> {
+            override fun onResponse(call: Call<String>, response: Response<String>) {
+                if (response.isSuccessful) {
+                    response.body()?.let { successFun(it) }
+                } else {
+                    errorFun("Request failed: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<String>, t: Throwable) {
+                errorFun("Error: ${t.message}")
+            }
+        })
+    }
 }
+

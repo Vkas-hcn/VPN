@@ -69,15 +69,17 @@ object SplashFun {
         var adShown = false // Flag to indicate if the ad has been shown
         if (MainApp.adManager.canShowAd(KeyAppFun.open_type) == KeyAppFun.ad_jump_over) {
             jumpFun()
+            return
         }
 
         val checkConditionAndPreloadAd = object : Runnable {
             override fun run() {
-                if (adShown) return // If the ad has been shown, stop execution
+                if (adShown) return
                 attemptCount++
-                if (attemptCount < 20) { // 4000ms / 500ms = 8 attempts
+                if (attemptCount < 20) {
                     handler.postDelayed(this, 500)
                 } else {
+                    adShown = true
                     Log.e("TAG", "等待OPEN广告超时。。。 ", )
                     jumpFun()
                 }

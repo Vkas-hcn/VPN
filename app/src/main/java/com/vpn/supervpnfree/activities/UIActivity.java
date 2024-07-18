@@ -14,6 +14,7 @@ import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -84,6 +85,12 @@ public abstract class UIActivity extends BaseActivity implements View.OnClickLis
     ImageView img_yuan_3;
     @BindView(R.id.tv_date)
     TextView tv_date;
+    @BindView(R.id.ad_layout)
+    public ConstraintLayout ad_layout;
+    @BindView(R.id.img_oc_ad)
+    public ImageView img_oc_ad;
+    @BindView(R.id.ad_layout_admob)
+    public FrameLayout ad_layout_admob;
 
     @BindView(R.id.privacybtn)
     LinearLayout privacybtn;

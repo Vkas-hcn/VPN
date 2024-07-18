@@ -50,7 +50,7 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
             holder.limit.setVisibility(View.INVISIBLE);
         } else {
             holder.flag.setImageResource(KeyAppFun.INSTANCE.getFlagImageData(bean.getWIqcDNWy()));
-            holder.app_name.setText(bean.getWIqcDNWy());
+            holder.app_name.setText(bean.getWIqcDNWy()+"-"+bean.getRLhLoQLm());
             holder.limit.setVisibility(View.VISIBLE);
         }
 
@@ -67,7 +67,7 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView app_name;
-        ImageView flag, pro;
+        ImageView flag;
         ImageView limit;
 
         ViewHolder(View v) {
@@ -75,9 +75,6 @@ public class LocationListAdapter extends RecyclerView.Adapter<LocationListAdapte
             this.app_name = itemView.findViewById(R.id.region_title);
             this.limit = itemView.findViewById(R.id.region_limit);
             this.flag = itemView.findViewById(R.id.country_flag);
-            this.pro = itemView.findViewById(R.id.pro);
         }
     }
-
-
 }

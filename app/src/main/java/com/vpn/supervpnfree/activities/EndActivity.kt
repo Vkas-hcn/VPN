@@ -7,11 +7,13 @@ import android.os.Bundle
 import android.os.Handler
 import android.util.Log
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.vpn.supervpnfree.MainApp
@@ -22,6 +24,7 @@ import com.vpn.supervpnfree.data.KeyAppFun
 import com.vpn.supervpnfree.data.VpnStateData
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class EndActivity : BaseActivity() {
@@ -37,7 +40,13 @@ class EndActivity : BaseActivity() {
     var tv_num_up: TextView? = null
     var tv_un_up: TextView? = null
 
+    var img_oc: ImageView? = null
+    var ad_layout_admob: FrameLayout? = null
+
+    var con_load_ad: ConstraintLayout? = null
+
     private var speedJob: Job? = null
+    private var showEndAdJob: Job? = null
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,6 +58,7 @@ class EndActivity : BaseActivity() {
         clickFun()
         liveVpnState()
         showVpnState()
+        showHomeAd()
         onBackPressedDispatcher.addCallback(this) {
             showReturnFun()
         }
@@ -63,7 +73,9 @@ class EndActivity : BaseActivity() {
         tv_un_dow = findViewById(R.id.tv_un_dow)
         tv_num_up = findViewById(R.id.tv_num_up)
         tv_un_up = findViewById(R.id.tv_un_up)
-
+        img_oc = findViewById(R.id.img_oc)
+        ad_layout_admob = findViewById(R.id.ad_layout_admob)
+        con_load_ad = findViewById(R.id.con_load_ad)
     }
 
     private fun clickFun() {
@@ -82,10 +94,29 @@ class EndActivity : BaseActivity() {
         handler?.post(updateUITimer)
     }
 
-    private fun showReturnFun(){
-        setResult(Activity.RESULT_OK, intent)
-        finish()
+    private fun showReturnFun() {
+        lifecycleScope.launch {
+            if (MainApp.adManager.canShowAd(KeyAppFun.list_type) == KeyAppFun.ad_jump_over) {
+                setResult(Activity.RESULT_OK, intent)
+                finish()
+                return@launch
+            }
+            if (MainApp.adManager.canShowAd(KeyAppFun.list_type) == KeyAppFun.ad_show) {
+                con_load_ad?.isVisible = true
+                delay(1000)
+                con_load_ad?.isVisible = false
+                MainApp.adManager.showAd(KeyAppFun.list_type, this@EndActivity) {
+                    setResult(Activity.RESULT_OK, intent)
+                    finish()
+                }
+            } else {
+                setResult(Activity.RESULT_OK, intent)
+                finish()
+            }
+        }
+
     }
+
     private fun showVpnState() {
         if (Hot.vpnStateHotData == VpnStateData.CONNECTED) {
             showVpnSpeed()
@@ -99,9 +130,9 @@ class EndActivity : BaseActivity() {
             appCompatImageView?.setImageResource(KeyAppFun.getFlagImageData(clickBean.wIqcDNWy))
         }
         val miService = preference?.getStringpreference(KeyAppFun.l_service_mi_data)
-        if(miService?.isNotBlank() == true){
-            preference?.setStringpreference(KeyAppFun.l_service_now_data,miService)
-            preference?.setStringpreference(KeyAppFun.l_service_mi_data,"")
+        if (miService?.isNotBlank() == true) {
+            preference?.setStringpreference(KeyAppFun.l_service_now_data, miService)
+            preference?.setStringpreference(KeyAppFun.l_service_mi_data, "")
         }
     }
 
@@ -115,6 +146,29 @@ class EndActivity : BaseActivity() {
                 tv_un_dow?.text = MainApp.saveLoadManager.getString("easy_up_unit", "B/s")
                 tv_num_up?.text = MainApp.saveLoadManager.getString("easy_dow_num", "0")
                 tv_un_up?.text = MainApp.saveLoadManager.getString("easy_dow_unit", "B/s")
+            }
+        }
+    }
+
+    private fun showHomeAd() {
+        showEndAdJob?.cancel()
+        showEndAdJob = null
+        if (MainApp.adManager.canShowAd(KeyAppFun.result_type) == KeyAppFun.ad_jump_over) {
+            img_oc?.isVisible = true
+            ad_layout_admob?.isVisible = false
+            return
+        }
+        showEndAdJob = lifecycleScope.launch {
+            delay(300)
+            while (isActive) {
+                if (MainApp.adManager.canShowAd(KeyAppFun.result_type) == KeyAppFun.ad_show) {
+                    MainApp.adManager.showAd(KeyAppFun.result_type, this@EndActivity) {
+                    }
+                    showEndAdJob?.cancel()
+                    showEndAdJob = null
+                    break
+                }
+                delay(500L)
             }
         }
     }

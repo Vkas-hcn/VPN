@@ -28,6 +28,15 @@ object KeyAppFun {
     const val ad_show = "ad_show"
 
     const val ip_value = "ip_value"
+
+//    const val ref_data = "ref_data"
+
+    const val cloak_data = "cloak_data"
+
+    const val easy_vpn_flow_data = "easy_vpn_flow_data"
+
+    const val uuid_easy_data = "uuid_easy_data"
+
     fun getFlagImageData(name: String): Int {
         return when (name) {
             "United States" -> R.drawable.us

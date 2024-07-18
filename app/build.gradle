@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
-
+apply plugin: 'stringfog'
 buildscript {
     repositories {
         maven { url 'https://plugins.gradle.org/m2/' }
@@ -10,15 +10,23 @@ buildscript {
 repositories {
     maven { url 'https://maven.google.com' }
 }
-
+import com.github.megatronking.stringfog.plugin.kg.RandomKeyGenerator
+import com.github.megatronking.stringfog.plugin.StringFogMode
+stringfog {
+    implementation 'com.github.megatronking.stringfog.xor.StringFogImpl'
+    enable true
+    fogPackages = ['com.vpn.supervpnfree']
+    kg new RandomKeyGenerator()
+    mode StringFogMode.base64
+}
 android {
-    compileSdkVersion 34
+    compileSdk 34
     defaultConfig {
-        applicationId "com.show.cat.caar.best.new.fastvpn"
+        applicationId "com.show.cat.caar.best.newbest.fastvpn"
         minSdkVersion 24
         targetSdkVersion 34
-        versionCode 7
-        versionName "1.0.7"
+        versionCode 8
+        versionName "1.0.8"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -33,14 +41,27 @@ android {
         def adConfigContent = adConfigFile.text.replace("\n", "\\n").replace("\"", "\\\"")
 
         buildConfigField "String", "GOOGLE_AD_DATA", "\"${adConfigContent}\""
+
+        def adConfigFileRef = file('src/main/assets/easy_ref.json')
+        def adConfigContentRef = adConfigFileRef.text.replace("\n", "\\n").replace("\"", "\\\"")
+
+        buildConfigField "String", "GOOGLE_REF_DATA", "\"${adConfigContentRef}\""
+
+        def adConfigFileLj = file('src/main/assets/easy_lj.json')
+        def adConfigContentLj = adConfigFileLj.text.replace("\n", "\\n").replace("\"", "\\\"")
+
+        buildConfigField "String", "GOOGLE_LJ_DATA", "\"${adConfigContentLj}\""
     }
 
 
     buildTypes {
+        debug{
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-
         }
     }
     compileOptions {
@@ -85,6 +106,8 @@ dependencies {
     implementation 'com.facebook.android:facebook-android-sdk:12.3.0'
     implementation 'com.blankj:utilcodex:1.31.1'
     implementation 'com.tencent:mmkv:1.3.7'
+    implementation 'com.github.megatronking.stringfog:xor:4.0.1'
+
 }
 
 

@@ -20,15 +20,22 @@
 
 package com.github.shadowsocks.bg
 
+import android.Manifest
 import android.app.PendingIntent
 import android.app.Service
+import android.app.sdksandbox.SdkSandboxManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
 import android.os.Build
 import android.os.PowerManager
 import android.text.format.Formatter
+import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
@@ -41,59 +48,81 @@ import com.github.shadowsocks.core.R
 import com.github.shadowsocks.utils.Action
 
 /**
-  * User can customize visibility of notification since Android 8.
-  * The default visibility:
-  *
-  * Android 8.x: always visible due to system limitations
-  * VPN:         always invisible because of VPN notification/icon
-  * Other:       always visible
-  *
-  * See also: https://github.com/aosp-mirror/platform_frameworks_base/commit/070d142993403cc2c42eca808ff3fafcee220ac4
+ * User can customize visibility of notification since Android 8.
+ * The default visibility:
+ *
+ * Android 8.x: always visible due to system limitations
+ * VPN:         always invisible because of VPN notification/icon
+ * Other:       always visible
+ *
+ * See also: https://github.com/aosp-mirror/platform_frameworks_base/commit/070d142993403cc2c42eca808ff3fafcee220ac4
  */
-class ServiceNotification(private val service: BaseService.Interface, profileName: String,
-                          channel: String, visible: Boolean = false) : BroadcastReceiver() {
+class ServiceNotification(
+    private val service: BaseService.Interface, profileName: String,
+    channel: String, visible: Boolean = false
+) : BroadcastReceiver() {
     private val callback: IShadowsocksServiceCallback by lazy {
         object : IShadowsocksServiceCallback.Stub() {
-            override fun stateChanged(state: Int, profileName: String?, msg: String?) { }   // ignore
+            override fun stateChanged(state: Int, profileName: String?, msg: String?) {}   // ignore
             override fun trafficUpdated(profileId: Long, stats: TrafficStats) {
                 if (profileId != 0L) return
                 builder.apply {
-                    setContentText((service as Context).getString(R.string.traffic,
-                            service.getString(R.string.speed, Formatter.formatFileSize(service, stats.txRate)),
-                            service.getString(R.string.speed, Formatter.formatFileSize(service, stats.rxRate))))
-                    setSubText(service.getString(R.string.traffic,
+                    setContentText(
+                        (service as Context).getString(
+                            R.string.traffic,
+                            service.getString(
+                                R.string.speed,
+                                Formatter.formatFileSize(service, stats.txRate)
+                            ),
+                            service.getString(
+                                R.string.speed,
+                                Formatter.formatFileSize(service, stats.rxRate)
+                            )
+                        )
+                    )
+                    setSubText(
+                        service.getString(
+                            R.string.traffic,
                             Formatter.formatFileSize(service, stats.txTotal),
-                            Formatter.formatFileSize(service, stats.rxTotal)))
+                            Formatter.formatFileSize(service, stats.rxTotal)
+                        )
+                    )
                 }
                 ShowVpnStateUtils.getSpeedData(service, stats)
                 show()
             }
-            override fun trafficPersisted(profileId: Long) { }
+
+            override fun trafficPersisted(profileId: Long) {}
         }
     }
     private var callbackRegistered = false
 
     private val builder = NotificationCompat.Builder(service as Context, channel)
-            .setWhen(0)
-            .setColor(ContextCompat.getColor(service, R.color.ic_launcher_background))
-            .setTicker(service.getString(R.string.forward_success))
-            .setContentTitle(profileName)
-            .setContentIntent(Core.configureIntent(service))
-            .setSmallIcon(R.drawable.ic_service_active)
-            .setCategory(NotificationCompat.CATEGORY_SERVICE)
-            .setPriority(if (visible) NotificationCompat.PRIORITY_LOW else NotificationCompat.PRIORITY_MIN)
+        .setWhen(0)
+        .setColor(ContextCompat.getColor(service, R.color.ic_launcher_background))
+        .setTicker(service.getString(R.string.forward_success))
+        .setContentTitle(profileName)
+        .setContentIntent(Core.configureIntent(service))
+        .setSmallIcon(R.drawable.ic_service_active)
+        .setCategory(NotificationCompat.CATEGORY_SERVICE)
+        .setPriority(if (visible) NotificationCompat.PRIORITY_LOW else NotificationCompat.PRIORITY_MIN)
 
     init {
         service as Context
         val closeAction = NotificationCompat.Action.Builder(
-                R.drawable.ic_service_active,
-                service.getText(R.string.stop),
-                PendingIntent.getBroadcast(service, 0, Intent(Action.CLOSE).setPackage(service.packageName),
-                    PendingIntent.FLAG_IMMUTABLE)).apply {
+            R.drawable.ic_service_active,
+            service.getText(R.string.stop),
+            PendingIntent.getBroadcast(
+                service, 0, Intent(Action.CLOSE).setPackage(service.packageName),
+                PendingIntent.FLAG_IMMUTABLE
+            )
+        ).apply {
             setAuthenticationRequired(true)
             setShowsUserInterface(false)
         }.build()
-        if (Build.VERSION.SDK_INT < 24) builder.addAction(closeAction) else builder.addInvisibleAction(closeAction)
+        if (Build.VERSION.SDK_INT < 24) builder.addAction(closeAction) else builder.addInvisibleAction(
+            closeAction
+        )
         updateCallback(service.getSystemService<PowerManager>()?.isInteractive != false)
         service.registerReceiver(this, IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_ON)
@@ -117,7 +146,36 @@ class ServiceNotification(private val service: BaseService.Interface, profileNam
         }
     }
 
-    private fun show() = (service as Service).startForeground(1, builder.build())
+    private fun show() {
+
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
+            Log.e("TAG", "show: 111111", )
+            if (ActivityCompat.checkSelfPermission(
+                    Core.app,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(
+                    Core.app,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                (service as Service).startForeground(
+                    1,
+                    builder.build(),
+                    FOREGROUND_SERVICE_TYPE_LOCATION
+                )
+            } else {
+                Log.e(
+                    "MyService",
+                    "No permissions ACCESS_FINE_LOCATION and ACCESS_COARSE_LOCATION!"
+                )
+            }
+        } else {
+            Log.e("TAG", "show: 22222222", )
+            (service as Service).startForeground(1, builder.build())
+        }
+    }
+
 
     fun destroy() {
         (service as Service).unregisterReceiver(this)

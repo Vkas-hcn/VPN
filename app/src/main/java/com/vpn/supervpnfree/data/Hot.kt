@@ -18,6 +18,10 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.MainThread
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
+import com.android.installreferrer.api.InstallReferrerClient
+import com.android.installreferrer.api.InstallReferrerStateListener
 import com.blankj.utilcode.util.ActivityUtils
 import com.github.shadowsocks.Core.init
 import com.github.shadowsocks.database.Profile
@@ -27,6 +31,7 @@ import com.github.shadowsocks.utils.StartService
 import com.google.android.gms.ads.AdActivity
 import com.google.gson.Gson
 import com.vpn.supervpnfree.BuildConfig
+import com.vpn.supervpnfree.MainApp
 import com.vpn.supervpnfree.Preference
 import com.vpn.supervpnfree.R
 import com.vpn.supervpnfree.activities.EndActivity
@@ -37,7 +42,9 @@ import com.vpn.supervpnfree.data.RetrofitClient.getServiceData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 enum class VpnStateData {
@@ -50,6 +57,7 @@ enum class VpnStateData {
 object Hot {
     private var serviceUrl =
         if (BuildConfig.DEBUG) "https://test.supervpnfreetouchvpn.com/BygQvwD/KCEPQWW/" else "https://api.supervpnfreetouchvpn.com/BygQvwD/KCEPQWW/"
+    var clockUrl = "https://lead.supervpnfreetouchvpn.com/scion/janitor"
     private var startedActivities = 0
     private var backgroundJob: Job? = null
     private var needExecBackgroundTask = false
@@ -57,7 +65,7 @@ object Hot {
     lateinit var connect: ActivityResultLauncher<Void?>
     var vpnStateHotData = VpnStateData.DISCONNECTED
     var clickStateHotData = VpnStateData.DISCONNECTED
-
+    var clickGuide = false
     fun initCore(app: Application) {
         init(app, MainActivity::class)
     }
@@ -337,6 +345,9 @@ object Hot {
         val jsonString = Gson().toJson(jsonBean)
         val intent = Intent()
         if (vpnStateHotData == VpnStateData.CONNECTED) {
+            val clickBeanString = preference.getStringpreference(KeyAppFun.l_service_now_data, jsonString)
+            val clickBean = Gson().fromJson(clickBeanString,ServiceData::class.java)
+            if(jsonBean.DCzDBHwKl == clickBean.DCzDBHwKl){return}
             currentConnectionFun(activity) {
                 preference.setStringpreference(KeyAppFun.l_service_mi_data, jsonString)
                 activity.setResult(Activity.RESULT_CANCELED, intent)
@@ -348,5 +359,68 @@ object Hot {
             activity.finish()
         }
     }
+
+    fun showReturnFun(activity: ServerActivity) {
+        activity.lifecycleScope.launch {
+            if (MainApp.adManager.canShowAd(KeyAppFun.list_type) == KeyAppFun.ad_jump_over) {
+                activity.setResult(Activity.RESULT_FIRST_USER, activity.intent)
+                activity.finish()
+                return@launch
+            }
+            if (MainApp.adManager.canShowAd(KeyAppFun.list_type) == KeyAppFun.ad_show) {
+                activity.con_load_ad?.isVisible = true
+                delay(1000)
+                activity.con_load_ad?.isVisible = false
+                MainApp.adManager.showAd(KeyAppFun.list_type, activity) {
+                    activity.setResult(Activity.RESULT_FIRST_USER, activity.intent)
+                    activity.finish()
+                }
+            } else {
+                activity.setResult(Activity.RESULT_FIRST_USER, activity.intent)
+                activity.finish()
+            }
+        }
+
+    }
+
+//    fun getRefDataFor(context: Context, preference: Preference) {
+//        GlobalScope.launch {
+//            while (isActive) {
+//                if (preference.getStringpreference(KeyAppFun.ref_data).isEmpty()) {
+//                    getRefData(context, preference)
+//                } else {
+//                    cancel()
+//                }
+//                delay(6000)
+//            }
+//        }
+//    }
+//
+//    private fun getRefData(context: Context, preference: Preference) {
+//        if (preference.getStringpreference(KeyAppFun.ref_data).isNotEmpty()) {
+//            return
+//        }
+////        preference.setStringpreference(KeyAppFun.ref_data,"fb4a")
+//        runCatching {
+//            val referrerClient = InstallReferrerClient.newBuilder(context).build()
+//            referrerClient.startConnection(object : InstallReferrerStateListener {
+//                override fun onInstallReferrerSetupFinished(p0: Int) {
+//                    when (p0) {
+//                        InstallReferrerClient.InstallReferrerResponse.OK -> {
+//                            val installReferrer =
+//                                referrerClient.installReferrer.installReferrer ?: ""
+//                            preference.setStringpreference(KeyAppFun.ref_data, installReferrer)
+//                            Log.e("TAG", "onInstallReferrerSetupFinished: ${installReferrer}")
+//                        }
+//                    }
+//                    referrerClient.endConnection()
+//                }
+//
+//                override fun onInstallReferrerServiceDisconnected() {
+//                }
+//            })
+//        }.onFailure { e ->
+//        }
+//    }
 
 }

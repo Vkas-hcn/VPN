@@ -72,11 +72,12 @@ class MainActivity : UIActivity() {
         showDueDialog()
         setVpnPer(this) {
             if (showDueDialog()) return@setVpnPer
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) requestNotificationPermissionLauncher.launch(
-                Manifest.permission.POST_NOTIFICATIONS
-            )
-            else clickButTOVpn()
-
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
+                requestNotificationPermissionLauncher.launch(
+                    Manifest.permission.POST_NOTIFICATIONS
+                )
+                Toast.makeText(this,"Android 14 devices require notification permissions for VPN service usage",Toast.LENGTH_LONG).show()
+            } else clickButTOVpn()
         }
         MainApp.saveLoadManager.encode(
             KeyAppFun.easy_vpn_flow_data, AdUtils.getIsOrNotRl(preference)
@@ -84,7 +85,7 @@ class MainActivity : UIActivity() {
         if (clickGuide) {
             cloneGuide()
         }
-        view_guide_1.setOnClickListener {  }
+        view_guide_1.setOnClickListener { }
     }
 
 
@@ -93,13 +94,18 @@ class MainActivity : UIActivity() {
             if (isGranted) {
                 clickButTOVpn()
             } else {
-                Snackbar.make(findViewById(R.id.main_layout), "Notification permission denied. Please enable it in settings.", Snackbar.LENGTH_LONG)
+                Snackbar.make(
+                    findViewById(R.id.main_layout),
+                    "Notification permission denied. Please enable it in settings.",
+                    Snackbar.LENGTH_LONG
+                )
                     .setAction("Settings") {
                         openAppSettings()
                     }
                     .show()
             }
         }
+
     private fun openAppSettings() {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
             data = Uri.fromParts("package", packageName, null)

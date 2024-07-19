@@ -22,17 +22,6 @@ object AdUtils {
         return String(Base64.decode(base64Str, Base64.DEFAULT))
     }
 
-    fun getRefBeanData(preference: Preference): AdRefBean {
-        val adRefBean = preference.getStringpreference(KeyAppFun.o_ml_data)
-        val localAdBean = BuildConfig.GOOGLE_REF_DATA
-        runCatching {
-            if (adRefBean.isNotEmpty()) {
-                return Gson().fromJson(base64Decode(adRefBean), AdRefBean::class.java)
-            } else {
-                return Gson().fromJson(localAdBean, AdRefBean::class.java)
-            }
-        }.getOrNull() ?: return Gson().fromJson(localAdBean, AdRefBean::class.java)
-    }
 
     fun getLjData(preference: Preference): AdLjBean {
         val adRefBean = preference.getStringpreference(KeyAppFun.o_me_data)

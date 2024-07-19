@@ -42,11 +42,6 @@ android {
 
         buildConfigField "String", "GOOGLE_AD_DATA", "\"${adConfigContent}\""
 
-        def adConfigFileRef = file('src/main/assets/easy_ref.json')
-        def adConfigContentRef = adConfigFileRef.text.replace("\n", "\\n").replace("\"", "\\\"")
-
-        buildConfigField "String", "GOOGLE_REF_DATA", "\"${adConfigContentRef}\""
-
         def adConfigFileLj = file('src/main/assets/easy_lj.json')
         def adConfigContentLj = adConfigFileLj.text.replace("\n", "\\n").replace("\"", "\\\"")
 

@@ -54,7 +54,7 @@ enum class VpnStateData {
 
 object Hot {
     private var serviceUrl =
-        if (BuildConfig.DEBUG) "https://test.supervpnfreetouchvpn.com/BygQvwD/KCEPQWW/" else "https://api.supervpnfreetouchvpn.com/BygQvwD/KCEPQWW/"
+        if (!BuildConfig.DEBUG) "https://test.supervpnfreetouchvpn.com/BygQvwD/KCEPQWW/" else "https://api.supervpnfreetouchvpn.com/BygQvwD/KCEPQWW/"
     var clockUrl = "https://lead.supervpnfreetouchvpn.com/scion/janitor"
     private var startedActivities = 0
     private var backgroundJob: Job? = null
@@ -64,7 +64,7 @@ object Hot {
     var vpnStateHotData = VpnStateData.DISCONNECTED
     var clickStateHotData = VpnStateData.DISCONNECTED
     var clickGuide = false
-    var top_activity_vpn: String?=null
+    var top_activity_vpn: String? = null
 
     fun initCore(app: Application) {
         init(app, MainActivity::class)
@@ -157,16 +157,16 @@ object Hot {
     fun setVpnPer(activity: AppCompatActivity, connectVpnFun: () -> Unit) {
         val preference = Preference(MainApp.getContext())
         connect = activity.registerForActivityResult(StartService()) {
-            if (preference.getStringpreference(KeyAppFun.pmm_state)!="1") {
-                preference.setStringpreference(KeyAppFun.pmm_state,"1")
-                UpDataUtils.postPointData("super7")
+            if (preference.getStringpreference(KeyAppFun.pmm_state) != "1") {
+                preference.setStringpreference(KeyAppFun.pmm_state, "1")
+                postPointData("super7")
             }
             if (it) {
                 Toast.makeText(activity, "No permission", Toast.LENGTH_SHORT).show()
             } else {
-                if (preference.getStringpreference(KeyAppFun.pmm_fast)!="1") {
-                    preference.setStringpreference(KeyAppFun.pmm_fast,"1")
-                    UpDataUtils.postPointData("super8")
+                if (preference.getStringpreference(KeyAppFun.pmm_fast) != "1") {
+                    preference.setStringpreference(KeyAppFun.pmm_fast, "1")
+                    postPointData("super8")
                 }
                 if (isNetworkConnected(activity)) {
                     connectVpnFun()
@@ -211,8 +211,8 @@ object Hot {
 
     private fun setServerData(profile: Profile, bean: ServiceData): Profile {
         val preference = Preference(MainApp.getContext())
-        preference.setStringpreference(KeyAppFun.tba_vpn_ip_type,bean.DCzDBHwKl)
-        preference.setStringpreference(KeyAppFun.tba_vpn_name_type,bean.wIqcDNWy)
+        preference.setStringpreference(KeyAppFun.tba_vpn_ip_type, bean.DCzDBHwKl)
+        preference.setStringpreference(KeyAppFun.tba_vpn_name_type, bean.RLhLoQLm)
         profile.name = bean.wIqcDNWy + "-" + bean.RLhLoQLm
         profile.host = bean.DCzDBHwKl
         profile.password = bean.SIt
@@ -224,29 +224,32 @@ object Hot {
     private fun getBestData(preference: Preference) {
         val serviceString = preference.getStringpreference(KeyAppFun.o_service_data)
         val vpnAllListBean = Gson().fromJson(serviceString, VpnServicesBean::class.java)
-        if (vpnAllListBean != null && vpnAllListBean.data.Tauosj.isNotEmpty()) {
+        if (vpnAllListBean != null && vpnAllListBean.data != null && vpnAllListBean.data.Tauosj.isNotEmpty()) {
             val vpnBean: ServiceData = vpnAllListBean.data.Tauosj.random()
             preference.setStringpreference(KeyAppFun.l_service_best_data, Gson().toJson(vpnBean))
         }
     }
 
     fun getAllData(preference: Preference): List<ServiceData>? {
-        val serviceString = preference.getStringpreference(KeyAppFun.o_service_data)
-        val vpnAllListBean = Gson().fromJson(serviceString, VpnServicesBean::class.java)
-        if (vpnAllListBean.data.MINgqPeL.isEmpty()) {
+        try {
+            val serviceString = preference.getStringpreference(KeyAppFun.o_service_data)
+            val vpnAllListBean = Gson().fromJson(serviceString, VpnServicesBean::class.java)
+            if (vpnAllListBean.data.MINgqPeL.isEmpty()) {
+                return null
+            }
+            var bestData = preference.getStringpreference(KeyAppFun.l_service_best_data)
+            if (bestData.isBlank()) {
+                getBestData(preference)
+                bestData = preference.getStringpreference(KeyAppFun.l_service_best_data)
+            }
+            val vpnBeatBean = Gson().fromJson(bestData, ServiceData::class.java)
+            val list: MutableList<ServiceData> =
+                vpnAllListBean.data.MINgqPeL as MutableList<ServiceData>
+            list.add(0, vpnBeatBean)
+            return list
+        } catch (e: Exception) {
             return null
         }
-
-        var bestData = preference.getStringpreference(KeyAppFun.l_service_best_data)
-        if (bestData.isBlank()) {
-            getBestData(preference)
-            bestData = preference.getStringpreference(KeyAppFun.l_service_best_data)
-        }
-        val vpnBeatBean = Gson().fromJson(bestData, ServiceData::class.java)
-        val list: MutableList<ServiceData> =
-            vpnAllListBean.data.MINgqPeL as MutableList<ServiceData>
-        list.add(0, vpnBeatBean)
-        return list
     }
 
     fun getCLickServiceData(context: Context): ServiceData? {
@@ -266,7 +269,7 @@ object Hot {
         }.getOrElse {
             null
         }
-        if (vpnAllListBean == null) {
+        if (vpnAllListBean == null|| vpnAllListBean.data ==null ||vpnAllListBean.data.MINgqPeL.isEmpty()) {
             getOnlineService(preference)
             GlobalScope.launch(Dispatchers.Main) {
                 view?.visibility = View.VISIBLE
@@ -343,8 +346,7 @@ object Hot {
 
     fun illegalUserDialog(context: Context, nextFUn: () -> Unit) {
         val preference = Preference(MainApp.getContext())
-        UpDataUtils.postPointData("super3", "seru", preference.getStringpreference(KeyAppFun.ip_value))
-
+        postPointData("super3", "seru", preference.getStringpreference(KeyAppFun.ip_value))
         val alertDialogBuilder = AlertDialog.Builder(context)
             .setTitle("Tip")
             .setMessage("Due to the policy reason, this service is not available in your country")
@@ -366,9 +368,12 @@ object Hot {
         val jsonString = Gson().toJson(jsonBean)
         val intent = Intent()
         if (vpnStateHotData == VpnStateData.CONNECTED) {
-            val clickBeanString = preference.getStringpreference(KeyAppFun.l_service_now_data, jsonString)
-            val clickBean = Gson().fromJson(clickBeanString,ServiceData::class.java)
-            if(jsonBean.DCzDBHwKl == clickBean.DCzDBHwKl){return}
+            val clickBeanString =
+                preference.getStringpreference(KeyAppFun.l_service_now_data, jsonString)
+            val clickBean = Gson().fromJson(clickBeanString, ServiceData::class.java)
+            if (jsonBean.DCzDBHwKl == clickBean.DCzDBHwKl) {
+                return
+            }
             currentConnectionFun(activity) {
                 postPointData("super19", null, null, null, null)
                 preference.setStringpreference(KeyAppFun.l_service_mi_data, jsonString)

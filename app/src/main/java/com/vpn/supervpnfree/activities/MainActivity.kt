@@ -151,14 +151,14 @@ class MainActivity : UIActivity() {
     }
 
     private fun showDueDialog(): Boolean {
-        if (RetrofitClient.shouldBlockAccess(preference)) {
-            Hot.illegalUserDialog(this) {
-                moveTaskToBack(true)
-                Process.killProcess(Process.myPid())
-                finish()
-            }
-            return true
-        }
+//        if (RetrofitClient.shouldBlockAccess(preference)) {
+//            Hot.illegalUserDialog(this) {
+//                moveTaskToBack(true)
+//                Process.killProcess(Process.myPid())
+//                finish()
+//            }
+//            return true
+//        }
         return false
     }
 

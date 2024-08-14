@@ -14,9 +14,13 @@ interface ApiService {
     @GET
     @Headers(
         "BLD: ZZ",
-        "JMODH: com.show.cat.caar.best.new.fastvpn"
+        "JMODH: com.vpn.supervpnfree.touchvpn.openvpn.fastvpn.freevpn.unblock.proxy.easyvpn"
     )
     fun getServiceData(@Url url: String): Call<String>
+
+
+    @GET
+    fun getBenIpData(@Url url: String): Call<String>
 
     @GET("/")
     fun getIpData(): Call<MyIpResponse>

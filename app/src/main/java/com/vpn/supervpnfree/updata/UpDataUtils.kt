@@ -1,9 +1,6 @@
 package com.vpn.supervpnfree.updata
 
-import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
-import android.provider.Settings
 import android.util.Log
 import android.webkit.WebSettings
 import com.adjust.sdk.Adjust
@@ -24,7 +21,6 @@ import com.vpn.supervpnfree.data.AdUtils
 import com.vpn.supervpnfree.data.ApiService
 import com.vpn.supervpnfree.data.Hot
 import com.vpn.supervpnfree.data.KeyAppFun
-import com.vpn.supervpnfree.data.RetrofitClient
 import com.vpn.supervpnfree.data.VpnStateData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -37,15 +33,16 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.util.Currency
 import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 object UpDataUtils {
     private var tbaUrl =
         if (BuildConfig.DEBUG) "https://test-messiah.supervpnfreetouchvpn.com/glisten/oberlin/cony" else "https://messiah.supervpnfreetouchvpn.com/belly/runaway"
@@ -490,32 +487,34 @@ object UpDataUtils {
         }
     }
 
-    private fun isNetworkReachable(): Boolean {
-        return try {
-            val process = Runtime.getRuntime().exec("/system/bin/ping -c 1 8.8.8.8")
-            val reader = BufferedReader(InputStreamReader(process.inputStream))
-            val output = StringBuilder()
-            var line: String?
-            while (reader.readLine().also { line = it } != null) {
-                output.append(line).append("\n")
+
+
+
+    fun isNetworkAvailable(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val network = connectivityManager.activeNetwork ?: return false
+            val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
+            return when {
+                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+                else -> false
             }
-            process.waitFor()
-            process.destroy()
-
-            val result = output.toString()
-            val state = result.contains("1 packets transmitted, 1 received")
-            Log.e("TAG", "isNetworkReachable: ${state}")
-            return state
-        } catch (e: Exception) {
-            Log.e("TAG", "isNetworkReachable: ----fasle")
-
-            false
+        } else {
+            @Suppress("DEPRECATION")
+            val networkInfo = connectivityManager.activeNetworkInfo ?: return false
+            @Suppress("DEPRECATION")
+            return networkInfo.isConnected
         }
     }
 
+
+
+
     fun super10() {
         GlobalScope.launch(Dispatchers.IO) {
-            val netState = isNetworkReachable()
+            val netState = isNetworkAvailable(MainApp.getContext())
             val isHaveData = if (netState) {
                 "1"
             } else {

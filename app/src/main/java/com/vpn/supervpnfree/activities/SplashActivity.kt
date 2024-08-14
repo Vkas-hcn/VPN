@@ -93,6 +93,9 @@ class SplashActivity : BaseActivity() {
         haveRefData(this)
         onBackPressedDispatcher.addCallback(this) {
         }
+
+        val isConnected = UpDataUtils.isNetworkAvailable(MainApp.getContext())
+        Log.e("TAG", "onCreate: isConnected=${isConnected}", )
     }
     private fun openOpenShowAdData(){
         SplashFun.openOpenAd(this) {
@@ -129,6 +132,7 @@ class SplashActivity : BaseActivity() {
             preference?.let {
                 Hot.getOnlineService(it)
                 RetrofitClient.detectCountry(it)
+                RetrofitClient.getBeIpData()
                 RetrofitClient.getBlackData(this@SplashActivity, it)
             }
         }

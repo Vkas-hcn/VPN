@@ -151,16 +151,13 @@ class ServiceNotification(
     }
 
     private fun show() {
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Log.e("TAG", "show: 111111")
             (service as Service).startForeground(
                 1,
                 builder.build(),
                 FOREGROUND_SERVICE_TYPE_DATA_SYNC
             )
         } else {
-            Log.e("TAG", "show: 22222222")
             (service as Service).startForeground(1, builder.build())
         }
     }

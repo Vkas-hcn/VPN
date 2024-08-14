@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
+import com.vpn.supervpnfree.MainApp
 import com.vpn.supervpnfree.Preference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -68,6 +69,25 @@ object RetrofitClient {
         })
     }
 
+    fun getBeIpData() {
+        val apiService = RetrofitClient.apiService
+        val call = apiService.getBenIpData("https://ifconfig.me/ip")
+        val preference = Preference(MainApp.getContext())
+        call.enqueue(object : Callback<String> {
+            override fun onResponse(call: Call<String>, response: Response<String>) {
+                if (response.isSuccessful) {
+                    response.body()?.let {
+                        Log.e("TAG", "本地ip=$it ")
+                        preference.setStringpreference(KeyAppFun.ip_data, it)
+                    }
+                } else {
+                }
+            }
+            override fun onFailure(call: Call<String>, t: Throwable) {
+            }
+        })
+    }
+
 
     private val retrofitMyIp by lazy {
         Retrofit.Builder()
@@ -111,7 +131,6 @@ object RetrofitClient {
                     val ipData = response.body()!!.ip.toUpperCase(Locale.ROOT)
 
                     preference.setStringpreference(KeyAppFun.ip_value, countryCode)
-                    preference.setStringpreference(KeyAppFun.ip_data, ipData)
                 } else {
                     // 如果第一个接口失败，调用第二个接口
                     infoIpService.getIpInfo().enqueue(object : Callback<InfoIpResponse> {
@@ -124,7 +143,6 @@ object RetrofitClient {
                                     response.body()!!.country_short.toUpperCase(Locale.ROOT)
                                 val ipData = response.body()!!.ip.toUpperCase(Locale.ROOT)
                                 preference.setStringpreference(KeyAppFun.ip_value, countryCode)
-                                preference.setStringpreference(KeyAppFun.ip_data, ipData)
                             }
                         }
 
@@ -146,7 +164,6 @@ object RetrofitClient {
                                 response.body()!!.country_short.toUpperCase(Locale.ROOT)
                             val ipData = response.body()!!.ip.toUpperCase(Locale.ROOT)
                             preference.setStringpreference(KeyAppFun.ip_value, countryCode)
-                            preference.setStringpreference(KeyAppFun.ip_data, ipData)
                         }
                     }
 

@@ -108,7 +108,10 @@ object RetrofitClient {
             override fun onResponse(call: Call<MyIpResponse>, response: Response<MyIpResponse>) {
                 if (response.isSuccessful && response.body() != null) {
                     val countryCode = response.body()!!.cc.toUpperCase(Locale.ROOT)
-                    preference.setStringpreference(KeyAppFun.open_type, countryCode)
+                    val ipData = response.body()!!.ip.toUpperCase(Locale.ROOT)
+
+                    preference.setStringpreference(KeyAppFun.ip_value, countryCode)
+                    preference.setStringpreference(KeyAppFun.ip_data, ipData)
                 } else {
                     // 如果第一个接口失败，调用第二个接口
                     infoIpService.getIpInfo().enqueue(object : Callback<InfoIpResponse> {
@@ -119,7 +122,9 @@ object RetrofitClient {
                             if (response.isSuccessful && response.body() != null) {
                                 val countryCode =
                                     response.body()!!.country_short.toUpperCase(Locale.ROOT)
-                                preference.setStringpreference(KeyAppFun.open_type, countryCode)
+                                val ipData = response.body()!!.ip.toUpperCase(Locale.ROOT)
+                                preference.setStringpreference(KeyAppFun.ip_value, countryCode)
+                                preference.setStringpreference(KeyAppFun.ip_data, ipData)
                             }
                         }
 
@@ -139,7 +144,9 @@ object RetrofitClient {
                         if (response.isSuccessful && response.body() != null) {
                             val countryCode =
                                 response.body()!!.country_short.toUpperCase(Locale.ROOT)
-                            preference.setStringpreference(KeyAppFun.open_type, countryCode)
+                            val ipData = response.body()!!.ip.toUpperCase(Locale.ROOT)
+                            preference.setStringpreference(KeyAppFun.ip_value, countryCode)
+                            preference.setStringpreference(KeyAppFun.ip_data, ipData)
                         }
                     }
 
@@ -156,7 +163,7 @@ object RetrofitClient {
             val params = blackBeanData(context, preference)
             try {
                 executeGetRequest(
-                    "https://lead.supervpnfreetouchvpn.com/scion/janitor",
+                    Hot.clockUrl,
                     params, {
                         Log.e("TAG", "BlackData-Success: $it", )
                         preference.setStringpreference(KeyAppFun.cloak_data,it)

@@ -18,11 +18,10 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.addCallback
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceDataStore
@@ -45,6 +44,9 @@ import com.vpn.supervpnfree.data.Hot.setVpnStateData
 import com.vpn.supervpnfree.data.KeyAppFun
 import com.vpn.supervpnfree.data.RetrofitClient
 import com.vpn.supervpnfree.data.VpnStateData
+import com.vpn.supervpnfree.updata.UpDataUtils
+import com.vpn.supervpnfree.updata.UpDataUtils.super10
+import com.vpn.supervpnfree.updata.UpDataUtils.postPointData
 import com.vpn.supervpnfree.utils.ImageRotator
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -72,12 +74,24 @@ class MainActivity : UIActivity() {
         showDueDialog()
         setVpnPer(this) {
             if (showDueDialog()) return@setVpnPer
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU && Hot.vpnStateHotData != VpnStateData.CONNECTED) {
+                postPointData("super5")
+            }
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
-                requestNotificationPermissionLauncher.launch(
-                    Manifest.permission.POST_NOTIFICATIONS
-                )
-                Toast.makeText(this,"Android 14 devices require notification permissions for VPN service usage",Toast.LENGTH_LONG).show()
-            } else clickButTOVpn()
+                if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                    clickButTOVpn()
+                } else {
+                    requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    Toast.makeText(
+                        this,
+                        "Android 14 devices require notification permissions for VPN service usage",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            } else {
+                clickButTOVpn()
+            }
+
         }
         MainApp.saveLoadManager.encode(
             KeyAppFun.easy_vpn_flow_data, AdUtils.getIsOrNotRl(preference)
@@ -93,6 +107,7 @@ class MainActivity : UIActivity() {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
             if (isGranted) {
                 clickButTOVpn()
+                postPointData("super4")
             } else {
                 Snackbar.make(
                     findViewById(R.id.main_layout),
@@ -136,14 +151,14 @@ class MainActivity : UIActivity() {
     }
 
     private fun showDueDialog(): Boolean {
-//        if (RetrofitClient.shouldBlockAccess(preference)) {
-//            Hot.illegalUserDialog(this) {
-//                moveTaskToBack(true)
-//                Process.killProcess(Process.myPid())
-//                finish()
-//            }
-//            return true
-//        }
+        if (RetrofitClient.shouldBlockAccess(preference)) {
+            Hot.illegalUserDialog(this) {
+                moveTaskToBack(true)
+                Process.killProcess(Process.myPid())
+                finish()
+            }
+            return true
+        }
         return false
     }
 
@@ -188,14 +203,15 @@ class MainActivity : UIActivity() {
                 )
             )
         }
-
-
     }
 
     private var lastExecutionTime: Long = 0
 
     private fun initVpnSet() {
         Log.e(TAG, "initVpnSet: ${vpnStateMi}")
+        if (Hot.vpnStateHotData != VpnStateData.CONNECTED) {
+            postPointData("super6")
+        }
         val currentTime = SystemClock.elapsedRealtime()
         if (currentTime - lastExecutionTime < 2000) {
             return
@@ -230,6 +246,7 @@ class MainActivity : UIActivity() {
             if (Hot.vpnStateHotData == VpnStateData.DISCONNECTED) {
                 updateUI(VpnStateData.CONNECTING)
                 delay(2000)
+                postPointData("super9")
                 startVpnProcess()
             }
             if (Hot.vpnStateHotData == VpnStateData.CONNECTED) {
@@ -237,9 +254,21 @@ class MainActivity : UIActivity() {
                 MainApp.adManager.loadAd(KeyAppFun.result_type)
                 updateUI(VpnStateData.DISCONNECTING)
                 delay(2000)
+                postPointData("super13")
                 showConnectAd {
                     stopVpnProcess()
                 }
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch {
+            delay(300)
+            val state = lifecycle.currentState == Lifecycle.State.RESUMED
+            if(state){
+                postPointData("super2")
             }
         }
     }
@@ -318,6 +347,7 @@ class MainActivity : UIActivity() {
                         MainApp.adManager.loadAd(KeyAppFun.list_type)
                         MainApp.adManager.loadAd(KeyAppFun.result_type)
                     }
+                    super10()
                 }
 
                 "Connecting" -> {

@@ -1,9 +1,12 @@
 package com.vpn.supervpnfree.data
 
 import androidx.annotation.Keep
+import okhttp3.RequestBody
 import retrofit2.Call
+import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Headers
+import retrofit2.http.POST
 import retrofit2.http.QueryMap
 import retrofit2.http.Url
 
@@ -24,6 +27,12 @@ interface ApiService {
     fun getMapRequest(
         @Url url: String,
         @QueryMap(encoded = true) map: Map<String, @JvmSuppressWildcards Any>
+    ): Call<String>
+
+    @POST
+    fun postPutData(
+        @Url url: String,
+        @Body body: RequestBody
     ): Call<String>
 }
 @Keep

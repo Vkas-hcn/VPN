@@ -30,6 +30,7 @@ import com.vpn.supervpnfree.data.KeyAppFun;
 import com.vpn.supervpnfree.data.ServiceData;
 import com.vpn.supervpnfree.dialog.CountryData;
 import com.google.gson.Gson;
+import com.vpn.supervpnfree.updata.UpDataUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -82,6 +83,7 @@ public class ServerActivity extends BaseActivity {
                 Hot.INSTANCE.showReturnFun(ServerActivity.this);
             }
         });
+        UpDataUtils.INSTANCE.postPointData("super18",null,null,null,null);
     }
 
 

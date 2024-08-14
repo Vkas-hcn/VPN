@@ -1,16 +1,20 @@
 package com.vpn.supervpnfree.activities
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
+import android.provider.Settings
+import android.util.Log
 import android.widget.ProgressBar
-import android.widget.Toast
 import androidx.activity.addCallback
-import androidx.core.view.isVisible
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import butterknife.ButterKnife
+import com.adjust.sdk.Adjust
+import com.adjust.sdk.AdjustConfig
+import com.google.android.ump.ConsentDebugSettings
 import com.google.android.ump.ConsentInformation
 import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.FormError
@@ -22,10 +26,11 @@ import com.vpn.supervpnfree.activities.SplashFun.getFirebaseDataFun
 import com.vpn.supervpnfree.data.Hot
 import com.vpn.supervpnfree.data.KeyAppFun
 import com.vpn.supervpnfree.data.RetrofitClient
-import com.vpn.supervpnfree.data.VpnStateData
-import com.vpn.supervpnfree.utils.AdManager
+import com.vpn.supervpnfree.updata.UpDataUtils
+import com.vpn.supervpnfree.updata.UpDataUtils.haveRefData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -54,6 +59,7 @@ class SplashActivity : BaseActivity() {
         getUUID()
         initData()
         initProgress()
+        initAdJust(MainApp.getContext())
         val params = ConsentRequestParameters.Builder().setTagForUnderAgeOfConsent(false).build()
         consentInformation = UserMessagingPlatform.getConsentInformation(this)
         consentInformation?.requestConsentInfoUpdate(
@@ -73,28 +79,44 @@ class SplashActivity : BaseActivity() {
                 }
             },
             { requestConsentError: FormError? -> })
-//        if (consentInformation?.canRequestAds() == true) {
         if (isMobileAdsInitializeCalled.getAndSet(true)) {
             return
         }
-
+        updateUserOpinions()
         getFirebaseDataFun(this) {
             MainApp.adManager.loadAd(KeyAppFun.open_type)
             MainApp.adManager.loadAd(KeyAppFun.cont_type)
             MainApp.adManager.loadAd(KeyAppFun.home_type)
-            SplashFun.openOpenAd(this) {
-                cancelStartPro()
-                if(MainApp.adManager.isAppInForeground(this)){
-                    startActivity(Intent(this@SplashActivity, MainActivity::class.java))
-                    finish()
-                }
-            }
+            clickEuAdState()
         }
-//        }
+        UpDataUtils.postSessionData()
+        haveRefData(this)
         onBackPressedDispatcher.addCallback(this) {
         }
     }
+    private fun openOpenShowAdData(){
+        SplashFun.openOpenAd(this) {
+            cancelStartPro()
+            if(MainApp.adManager.isAppInForeground(this)){
+                startActivity(Intent(this@SplashActivity, MainActivity::class.java))
+                finish()
+            }
+        }
+    }
 
+    private fun clickEuAdState(){
+        val preference = Preference(this)
+        lifecycleScope.launch(Dispatchers.Main) {
+            while (isActive){
+                val data = preference.getStringpreference(KeyAppFun.ad_eu_state,"0")
+                if(data == "1"){
+                    openOpenShowAdData()
+                    cancel()
+                }
+                delay(500)
+            }
+        }
+    }
     private fun cancelStartPro() {
         proStart?.progress = 100
         startProJob?.cancel()
@@ -130,7 +152,7 @@ class SplashActivity : BaseActivity() {
             while (isActive && proInt < 100) {
                 proInt++
                 proStart?.progress = proInt
-                delay(140)
+                delay(150)
             }
             if (proInt >= 100) {
                 cancelStartPro()
@@ -141,5 +163,64 @@ class SplashActivity : BaseActivity() {
     override fun onDestroy() {
         handler!!.removeCallbacksAndMessages(null)
         super.onDestroy()
+    }
+    @SuppressLint("HardwareIds")
+    private fun initAdJust(context: Context) {
+        val preference = Preference(this)
+        Adjust.addSessionCallbackParameter(
+            "customer_user_id",
+            Settings.Secure.getString(application.contentResolver, Settings.Secure.ANDROID_ID)
+        )
+        val appToken = "ih2pm2dr3k74"
+        val environment: String = AdjustConfig.ENVIRONMENT_SANDBOX
+        val config = AdjustConfig(context, appToken, environment)
+        config.needsCost = true
+        config.setOnAttributionChangedListener { attribution ->
+            Log.e("TAG", "adjust=${attribution}")
+            val data = preference.getStringpreference(KeyAppFun.tba_adjust_type,"0")
+            if (data != "1" && attribution.network.isNotEmpty() && attribution.network.contains(
+                    "organic",
+                    true
+                ).not()
+            ) {
+                preference.setStringpreference(KeyAppFun.tba_adjust_type,"1")
+            }
+        }
+        Adjust.onCreate(config)
+    }
+
+    private fun updateUserOpinions() {
+        val preference = Preference(this)
+        val data = preference.getStringpreference(KeyAppFun.ad_eu_state,"0")
+
+        if (data=="1") {
+            return
+        }
+        val debugSettings =
+            ConsentDebugSettings.Builder(this)
+                .setDebugGeography(ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_EEA)
+                .addTestDeviceHashedId("202C0DAA36EB5148BDEA8A1E6E36A4B6")
+                .build()
+        val params = ConsentRequestParameters
+            .Builder()
+            .setConsentDebugSettings(debugSettings)
+            .build()
+        val consentInformation: ConsentInformation =
+            UserMessagingPlatform.getConsentInformation(this)
+        consentInformation.requestConsentInfoUpdate(
+            this,
+            params, {
+                UserMessagingPlatform.loadAndShowConsentFormIfRequired(this) {
+                    if (consentInformation.canRequestAds()) {
+                        preference.setStringpreference(KeyAppFun.ad_eu_state,"1")
+                        initProgress()
+                    }
+                }
+            },
+            {
+                preference.setStringpreference(KeyAppFun.ad_eu_state,"1")
+                initProgress()
+            }
+        )
     }
 }

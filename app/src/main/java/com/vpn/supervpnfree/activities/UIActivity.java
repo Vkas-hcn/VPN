@@ -34,6 +34,7 @@ import com.vpn.supervpnfree.R;
 import com.vpn.supervpnfree.data.Hot;
 import com.vpn.supervpnfree.data.KeyAppFun;
 import com.vpn.supervpnfree.data.ServiceData;
+import com.vpn.supervpnfree.updata.UpDataUtils;
 import com.vpn.supervpnfree.utils.Converter;
 
 import butterknife.BindView;

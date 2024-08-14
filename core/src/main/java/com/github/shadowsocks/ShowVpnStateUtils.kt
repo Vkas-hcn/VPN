@@ -64,7 +64,6 @@ object ShowVpnStateUtils {
             "com.google.android.cellbroadcastservice",
             "com.google.android.packageinstaller",
             "com.google.android.gms.location.history",
-            "com.android.chrome",
         )
     }
 }

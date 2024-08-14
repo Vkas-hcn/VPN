@@ -28,6 +28,8 @@ object KeyAppFun {
     const val ad_show = "ad_show"
 
     const val ip_value = "ip_value"
+    const val ip_data = "ip_data"
+
 
 //    const val ref_data = "ref_data"
 
@@ -37,6 +39,24 @@ object KeyAppFun {
 
     const val uuid_easy_data = "uuid_easy_data"
 
+
+    const val tba_install_type = "tba_install_type"
+
+    const val tba_vpn_name_type = "tba_vpn_name_type"
+    const val tba_vpn_ip_type = "tba_vpn_ip_type"
+
+    const val tba_adjust_type = "tba_adjust_type"
+
+    const val ad_eu_state = "ad_eu_state"
+
+    const val black_updata_state = "black_updata_state"
+
+
+    const val pmm_state = "pmm_state"
+
+    const val pmm_fast = "pmm_fast"
+
+    const val ad_more_type = "ad_more_type"
     fun getFlagImageData(name: String): Int {
         return when (name) {
             "United States" -> R.drawable.us

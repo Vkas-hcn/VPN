@@ -20,8 +20,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
-import com.android.installreferrer.api.InstallReferrerClient
-import com.android.installreferrer.api.InstallReferrerStateListener
+import com.adjust.sdk.Adjust
 import com.blankj.utilcode.util.ActivityUtils
 import com.github.shadowsocks.Core.init
 import com.github.shadowsocks.database.Profile
@@ -34,17 +33,16 @@ import com.vpn.supervpnfree.BuildConfig
 import com.vpn.supervpnfree.MainApp
 import com.vpn.supervpnfree.Preference
 import com.vpn.supervpnfree.R
-import com.vpn.supervpnfree.activities.EndActivity
 import com.vpn.supervpnfree.activities.MainActivity
 import com.vpn.supervpnfree.activities.ServerActivity
 import com.vpn.supervpnfree.activities.SplashActivity
 import com.vpn.supervpnfree.data.RetrofitClient.getServiceData
+import com.vpn.supervpnfree.updata.UpDataUtils
+import com.vpn.supervpnfree.updata.UpDataUtils.postPointData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 enum class VpnStateData {
@@ -66,6 +64,8 @@ object Hot {
     var vpnStateHotData = VpnStateData.DISCONNECTED
     var clickStateHotData = VpnStateData.DISCONNECTED
     var clickGuide = false
+    var top_activity_vpn: String?=null
+
     fun initCore(app: Application) {
         init(app, MainActivity::class)
     }
@@ -92,6 +92,9 @@ object Hot {
             }
 
             override fun onActivityStarted(activity: Activity) {
+                if (activity !is AdActivity) {
+                    top_activity_vpn = activity.javaClass.simpleName
+                }
                 startedActivities++
                 backgroundJob?.cancel()
                 backgroundJob = null
@@ -101,11 +104,14 @@ object Hot {
             }
 
             override fun onActivityResumed(activity: Activity) {
-
+                if (activity !is AdActivity) {
+                    top_activity_vpn = activity.javaClass.simpleName
+                }
+                Adjust.onResume()
             }
 
             override fun onActivityPaused(activity: Activity) {
-
+                Adjust.onPause()
             }
 
             override fun onActivityStopped(activity: Activity) {
@@ -149,10 +155,19 @@ object Hot {
     }
 
     fun setVpnPer(activity: AppCompatActivity, connectVpnFun: () -> Unit) {
+        val preference = Preference(MainApp.getContext())
         connect = activity.registerForActivityResult(StartService()) {
+            if (preference.getStringpreference(KeyAppFun.pmm_state)!="1") {
+                preference.setStringpreference(KeyAppFun.pmm_state,"1")
+                UpDataUtils.postPointData("super7")
+            }
             if (it) {
                 Toast.makeText(activity, "No permission", Toast.LENGTH_SHORT).show()
             } else {
+                if (preference.getStringpreference(KeyAppFun.pmm_fast)!="1") {
+                    preference.setStringpreference(KeyAppFun.pmm_fast,"1")
+                    UpDataUtils.postPointData("super8")
+                }
                 if (isNetworkConnected(activity)) {
                     connectVpnFun()
                 } else {
@@ -195,6 +210,9 @@ object Hot {
     }
 
     private fun setServerData(profile: Profile, bean: ServiceData): Profile {
+        val preference = Preference(MainApp.getContext())
+        preference.setStringpreference(KeyAppFun.tba_vpn_ip_type,bean.DCzDBHwKl)
+        preference.setStringpreference(KeyAppFun.tba_vpn_name_type,bean.wIqcDNWy)
         profile.name = bean.wIqcDNWy + "-" + bean.RLhLoQLm
         profile.host = bean.DCzDBHwKl
         profile.password = bean.SIt
@@ -295,7 +313,6 @@ object Hot {
         }
     }
 
-
     fun isMainProcess(context: Context): Boolean {
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val myPid = Process.myPid()
@@ -325,6 +342,9 @@ object Hot {
 
 
     fun illegalUserDialog(context: Context, nextFUn: () -> Unit) {
+        val preference = Preference(MainApp.getContext())
+        UpDataUtils.postPointData("super3", "seru", preference.getStringpreference(KeyAppFun.ip_value))
+
         val alertDialogBuilder = AlertDialog.Builder(context)
             .setTitle("Tip")
             .setMessage("Due to the policy reason, this service is not available in your country")
@@ -350,6 +370,7 @@ object Hot {
             val clickBean = Gson().fromJson(clickBeanString,ServiceData::class.java)
             if(jsonBean.DCzDBHwKl == clickBean.DCzDBHwKl){return}
             currentConnectionFun(activity) {
+                postPointData("super19", null, null, null, null)
                 preference.setStringpreference(KeyAppFun.l_service_mi_data, jsonString)
                 activity.setResult(Activity.RESULT_CANCELED, intent)
                 activity.finish()
@@ -362,6 +383,7 @@ object Hot {
     }
 
     fun showReturnFun(activity: ServerActivity) {
+        postPointData("super20", null, null, null, null)
         activity.lifecycleScope.launch {
             if (MainApp.adManager.canShowAd(KeyAppFun.list_type) == KeyAppFun.ad_jump_over) {
                 activity.setResult(Activity.RESULT_FIRST_USER, activity.intent)

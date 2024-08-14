@@ -4,6 +4,7 @@ import android.util.Base64
 import com.google.gson.Gson
 import com.vpn.supervpnfree.BuildConfig
 import com.vpn.supervpnfree.Preference
+import com.vpn.supervpnfree.updata.UpDataUtils
 
 object AdUtils {
 
@@ -18,6 +19,7 @@ object AdUtils {
             }
         }.getOrNull() ?: return Gson().fromJson(localAdBean, VpnAdBean::class.java)
     }
+
     fun base64Decode(base64Str: String): String {
         return String(Base64.decode(base64Str, Base64.DEFAULT))
     }
@@ -35,41 +37,6 @@ object AdUtils {
         }.getOrNull() ?: return Gson().fromJson(localAdBean, AdLjBean::class.java)
     }
 
-
-
-//    private fun isFacebookUser(preference: Preference): Boolean {
-//        val pattern = "fb4a|facebook".toRegex(RegexOption.IGNORE_CASE)
-//        return (pattern.containsMatchIn(preference.getStringpreference(KeyAppFun.ref_data)) && getRefBeanData(preference).fff_kk == "1")
-//    }
-//
-//    private fun isItABuyingUser(preference: Preference): Boolean {
-//        return isFacebookUser(preference)
-//                || (getRefBeanData(preference).ggg_dd == "1" && preference.getStringpreference(KeyAppFun.ref_data).contains(
-//            "gclid",
-//            true
-//        ))
-//                || (getRefBeanData(preference).nnn_tt == "1" && preference.getStringpreference(KeyAppFun.ref_data).contains(
-//            "not%20set",
-//            true
-//        ))
-//                || (getRefBeanData(preference).yyy_ss == "1" && preference.getStringpreference(KeyAppFun.ref_data).contains(
-//            "youtubeads",
-//            true
-//        ))
-//                || (getRefBeanData(preference).bbb_tt == "1" && preference.getStringpreference(KeyAppFun.ref_data).contains(
-//            "%7B%22",
-//            true
-//        ))
-//                || (getRefBeanData(preference).aaa_tt == "1" && preference.getStringpreference(KeyAppFun.ref_data).contains(
-//            "adjust",
-//            true
-//        ))
-//                || (getRefBeanData(preference).bbb_ee == "1" && preference.getStringpreference(KeyAppFun.ref_data).contains(
-//            "bytedance",
-//            true
-//        ))
-//    }
-
     fun getIsOrNotRl(preference: Preference): Boolean {
         when (getLjData(preference).rrr_ll) {
             "1" -> {
@@ -79,32 +46,15 @@ object AdUtils {
             "2" -> {
                 return false
             }
+
             else -> {
                 return true
             }
         }
     }
-//    fun refAdUsers(preference: Preference): Boolean {
-//        when (getLjData(preference).rrr_cc) {
-//            "1" -> {
-//                return false
-//            }
-//
-//            "2" -> {
-//                return !isItABuyingUser(preference)
-//            }
-//
-//            "3" -> {
-//                return true
-//            }
-//
-//            else -> {
-//                return false
-//            }
-//        }
-//    }
+
     fun getAdBlackData(preference: Preference): Boolean {
-        return when (getLjData(preference).ccc_kk) {
+        val state = when (getLjData(preference).ccc_kk) {
             "1" -> {
                 preference.getStringpreference(KeyAppFun.cloak_data) != "grady"
             }
@@ -117,5 +67,11 @@ object AdUtils {
                 preference.getStringpreference(KeyAppFun.cloak_data) != "grady"
             }
         }
+        val blackDataUpType = preference.getStringpreference(KeyAppFun.black_updata_state)
+        if (!state && blackDataUpType != "1") {
+            UpDataUtils.postPointData("super1")
+            preference.setStringpreference(KeyAppFun.black_updata_state, "1")
+        }
+        return state
     }
 }

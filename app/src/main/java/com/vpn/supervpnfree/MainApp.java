@@ -6,6 +6,7 @@ import androidx.multidex.MultiDexApplication;
 
 import com.tencent.mmkv.MMKV;
 import com.vpn.supervpnfree.data.Hot;
+import com.vpn.supervpnfree.updata.UpDataUtils;
 import com.vpn.supervpnfree.utils.AdManager;
 import com.vpn.supervpnfree.utils.GlobalTimer;
 

@@ -22,6 +22,8 @@ import com.vpn.supervpnfree.R
 import com.vpn.supervpnfree.data.Hot
 import com.vpn.supervpnfree.data.KeyAppFun
 import com.vpn.supervpnfree.data.VpnStateData
+import com.vpn.supervpnfree.updata.UpDataUtils
+import com.vpn.supervpnfree.updata.UpDataUtils.super12
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -62,6 +64,7 @@ class EndActivity : BaseActivity() {
         onBackPressedDispatcher.addCallback(this) {
             showReturnFun()
         }
+        super12()
     }
 
     private fun getIdFun() {
@@ -95,6 +98,7 @@ class EndActivity : BaseActivity() {
     }
 
     private fun showReturnFun() {
+        UpDataUtils.postPointData("super21", null, null, null, null)
         lifecycleScope.launch {
             if (MainApp.adManager.canShowAd(KeyAppFun.list_type) == KeyAppFun.ad_jump_over) {
                 setResult(Activity.RESULT_OK, intent)

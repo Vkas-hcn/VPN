@@ -2,15 +2,40 @@ package com.vpn.supervpnfree.data
 
 import android.util.Base64
 import com.google.gson.Gson
-import com.vpn.supervpnfree.BuildConfig
 import com.vpn.supervpnfree.Preference
 import com.vpn.supervpnfree.updata.UpDataUtils
-
+import android.content.Context
+import com.vpn.supervpnfree.MainApp
+import java.io.BufferedReader
+import java.io.InputStreamReader
 object AdUtils {
+
+
+    fun Context.loadJsonFromAssets(fileName: String): String? {
+        return try {
+            // Access the asset file
+            val inputStream = assets.open(fileName)
+            val bufferedReader = BufferedReader(InputStreamReader(inputStream))
+            // Use StringBuilder to read the file line by line
+            val stringBuilder = StringBuilder()
+            var line: String?
+            while (bufferedReader.readLine().also { line = it } != null) {
+                stringBuilder.append(line)
+            }
+            // Close the reader
+            bufferedReader.close()
+            inputStream.close()
+            // Return the JSON as a string
+            stringBuilder.toString()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
 
     fun getAdListData(preference: Preference): VpnAdBean {
         val onlineAdBean = preference.getStringpreference(KeyAppFun.o_ad_data)
-        val localAdBean = BuildConfig.GOOGLE_AD_DATA
+        val localAdBean = MainApp.getContext().loadJsonFromAssets("ad_config.json")
         runCatching {
             if (onlineAdBean.isNotEmpty()) {
                 return Gson().fromJson(base64Decode(onlineAdBean), VpnAdBean::class.java)
@@ -27,7 +52,7 @@ object AdUtils {
 
     fun getLjData(preference: Preference): AdLjBean {
         val adRefBean = preference.getStringpreference(KeyAppFun.o_me_data)
-        val localAdBean = BuildConfig.GOOGLE_LJ_DATA
+        val localAdBean = MainApp.getContext().loadJsonFromAssets("easy_lj.json")
         runCatching {
             if (adRefBean.isNotEmpty()) {
                 return Gson().fromJson(base64Decode(adRefBean), AdLjBean::class.java)

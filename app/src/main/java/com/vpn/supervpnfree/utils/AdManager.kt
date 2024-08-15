@@ -2,7 +2,6 @@ package com.vpn.supervpnfree.utils
 
 import android.app.Activity
 import android.app.Application
-import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.ImageView
@@ -14,14 +13,15 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.initialization.InitializationStatus
-import com.google.android.gms.ads.initialization.OnInitializationCompleteListener
+import com.google.android.gms.ads.appopen.AppOpenAd
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdOptions
 import com.google.android.gms.ads.nativead.NativeAdView
-import com.google.android.gms.ads.appopen.AppOpenAd
+import com.google.firebase.FirebaseApp
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.ktx.initialize
 import com.vpn.supervpnfree.MainApp
 import com.vpn.supervpnfree.Preference
 import com.vpn.supervpnfree.R
@@ -36,7 +36,6 @@ import com.vpn.supervpnfree.updata.UpDataUtils.super17
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.Calendar
-import java.util.concurrent.atomic.AtomicBoolean
 
 class AdManager(private val application: Application) {
     private val adCache = mutableMapOf<String, Any>()
@@ -55,6 +54,10 @@ class AdManager(private val application: Application) {
         MobileAds.initialize(application) {
             Log.d("AdManager", "AdMob initialized")
         }
+
+        //Application#onCreate()
+        Firebase.initialize(application)
+        FirebaseApp.initializeApp(application)
         resetCountsIfNeeded()
     }
 

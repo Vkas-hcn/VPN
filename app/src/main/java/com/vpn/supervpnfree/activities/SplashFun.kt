@@ -26,25 +26,23 @@ object SplashFun {
         var isCa = false
         var attemptCount = 0
         val preference = Preference(context)
-        if (!BuildConfig.DEBUG) {
-            val auth = Firebase.remoteConfig
-            auth.fetchAndActivate().addOnSuccessListener {
-                preference.setStringpreference(
-                    KeyAppFun.o_ad_data,
-                    auth.getString(KeyAppFun.o_ad_data)
-                )
-                preference.setStringpreference(
-                    KeyAppFun.o_ml_data,
-                    auth.getString(KeyAppFun.o_ml_data)
-                )
-                preference.setStringpreference(
-                    KeyAppFun.o_me_data,
-                    auth.getString(KeyAppFun.o_me_data)
-                )
-                isCa = true
-            }
+        val auth = Firebase.remoteConfig
+        auth.fetchAndActivate().addOnSuccessListener {
+            preference.setStringpreference(
+                KeyAppFun.o_ad_data,
+                auth.getString(KeyAppFun.o_ad_data)
+            )
+            preference.setStringpreference(
+                KeyAppFun.o_ml_data,
+                auth.getString(KeyAppFun.o_ml_data)
+            )
+            preference.setStringpreference(
+                KeyAppFun.o_me_data,
+                auth.getString(KeyAppFun.o_me_data)
+            )
+            isCa = true
         }
-        Log.e("TAG", "开始检测远程数据", )
+        Log.e("TAG", "开始检测远程数据")
 
         val checkConditionAndPreloadAd = object : Runnable {
             override fun run() {
@@ -52,11 +50,11 @@ object SplashFun {
                     loadAdFun()
                 } else {
                     attemptCount++
-                    Log.e("TAG", "检测远程数据中。。。", )
+                    Log.e("TAG", "检测远程数据中。。。")
                     if (attemptCount < 8) { // 4000ms / 500ms = 8 attempts
                         handler.postDelayed(this, 500)
                     } else {
-                        Log.e("TAG", "检测远程数据超时。。。", )
+                        Log.e("TAG", "检测远程数据超时。。。")
                         loadAdFun()
                     }
                 }
@@ -81,13 +79,13 @@ object SplashFun {
                     handler.postDelayed(this, 500)
                 } else {
                     adShown = true
-                    Log.e("TAG", "等待OPEN广告超时。。。 ", )
+                    Log.e("TAG", "等待OPEN广告超时。。。 ")
                     jumpFun()
                 }
 //                Log.e("TAG", "等待OPEN广告中。。。 ", )
-                if(MainApp.adManager.canShowAd(KeyAppFun.open_type) == KeyAppFun.ad_show){
+                if (MainApp.adManager.canShowAd(KeyAppFun.open_type) == KeyAppFun.ad_show) {
                     adShown = true
-                    MainApp.adManager.showAd(KeyAppFun.open_type,activity){
+                    MainApp.adManager.showAd(KeyAppFun.open_type, activity) {
                         jumpFun()
                     }
                 }

@@ -33,7 +33,7 @@ import com.github.shadowsocks.bg.BaseService
 import com.github.shadowsocks.utils.Key
 import com.google.android.material.snackbar.Snackbar
 import com.vpn.supervpnfree.MainApp
-import com.vpn.supervpnfree.MainApp.globalTimer
+import com.vpn.supervpnfree.MainApp.Companion.globalTimer
 import com.vpn.supervpnfree.R
 import com.vpn.supervpnfree.data.AdUtils
 import com.vpn.supervpnfree.data.Hot

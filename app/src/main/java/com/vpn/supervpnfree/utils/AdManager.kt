@@ -50,6 +50,11 @@ class AdManager(private val application: Application) {
     private var adDataCont: AdEasy? = null
     private var adDataList: AdEasy? = null
 
+    init {
+       resetCountsIfNeeded()
+        Log.e("TAG", ":adManager 11111111111111", )
+    }
+
     private fun canRequestAd(adType: String): Boolean {
         val currentTime = System.currentTimeMillis()
         val lastLoadTime = adTimestamps[adType] ?: 0L
@@ -342,7 +347,7 @@ class AdManager(private val application: Application) {
         }
 
         if (ad == null && !canLoadAd()) {
-            val preference = Preference(MainApp.getContext())
+            val preference = Preference(MainApp.context)
             if(preference.getStringpreference(KeyAppFun.ad_more_type,"")!="1"){
                 val type =  if(isShowAdMore()){"show"}else{"click"}
                 UpDataUtils.postPointData(

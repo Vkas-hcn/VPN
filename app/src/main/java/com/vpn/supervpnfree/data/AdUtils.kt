@@ -35,7 +35,7 @@ object AdUtils {
 
     fun getAdListData(preference: Preference): VpnAdBean {
         val onlineAdBean = preference.getStringpreference(KeyAppFun.o_ad_data)
-        val localAdBean = MainApp.getContext().loadJsonFromAssets("ad_config.json")
+        val localAdBean = MainApp.context.loadJsonFromAssets("ad_config.json")
         runCatching {
             if (onlineAdBean.isNotEmpty()) {
                 return Gson().fromJson(base64Decode(onlineAdBean), VpnAdBean::class.java)
@@ -52,7 +52,7 @@ object AdUtils {
 
     fun getLjData(preference: Preference): AdLjBean {
         val adRefBean = preference.getStringpreference(KeyAppFun.o_me_data)
-        val localAdBean = MainApp.getContext().loadJsonFromAssets("easy_lj.json")
+        val localAdBean = MainApp.context.loadJsonFromAssets("easy_lj.json")
         runCatching {
             if (adRefBean.isNotEmpty()) {
                 return Gson().fromJson(base64Decode(adRefBean), AdLjBean::class.java)

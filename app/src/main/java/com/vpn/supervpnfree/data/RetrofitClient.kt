@@ -72,7 +72,7 @@ object RetrofitClient {
     fun getBeIpData() {
         val apiService = RetrofitClient.apiService
         val call = apiService.getBenIpData("https://ifconfig.me/ip")
-        val preference = Preference(MainApp.getContext())
+        val preference = Preference(MainApp.context)
         call.enqueue(object : Callback<String> {
             override fun onResponse(call: Call<String>, response: Response<String>) {
                 if (response.isSuccessful) {

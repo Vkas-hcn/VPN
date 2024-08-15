@@ -73,14 +73,7 @@ object Hot {
     fun initCore(app: Application) {
         init(app, MainActivity::class)
     }
-    fun adAndFirebaseBase(application:Application){
-        MobileAds.initialize(application) {
-            Log.d("AdManager", "AdMob initialized")
-        }
-        Firebase.initialize(application)
-        FirebaseApp.initializeApp(application)
-        MainApp.adManager.resetCountsIfNeeded()
-    }
+
     fun setVpnStateData(vpnStateData: VpnStateData) {
         vpnStateHotData = vpnStateData
     }
@@ -166,7 +159,7 @@ object Hot {
     }
 
     fun setVpnPer(activity: AppCompatActivity, connectVpnFun: () -> Unit) {
-        val preference = Preference(MainApp.getContext())
+        val preference = Preference(MainApp.context)
         connect = activity.registerForActivityResult(StartService()) {
             if (preference.getStringpreference(KeyAppFun.pmm_state) != "1") {
                 preference.setStringpreference(KeyAppFun.pmm_state, "1")
@@ -221,7 +214,7 @@ object Hot {
     }
 
     private fun setServerData(profile: Profile, bean: ServiceData): Profile {
-        val preference = Preference(MainApp.getContext())
+        val preference = Preference(MainApp.context)
         preference.setStringpreference(KeyAppFun.tba_vpn_ip_type, bean.DCzDBHwKl)
         preference.setStringpreference(KeyAppFun.tba_vpn_name_type, bean.RLhLoQLm)
         profile.name = bean.wIqcDNWy + "-" + bean.RLhLoQLm
@@ -356,7 +349,7 @@ object Hot {
 
 
     fun illegalUserDialog(context: Context, nextFUn: () -> Unit) {
-        val preference = Preference(MainApp.getContext())
+        val preference = Preference(MainApp.context)
         postPointData("super3", "seru", preference.getStringpreference(KeyAppFun.ip_value))
         val alertDialogBuilder = AlertDialog.Builder(context)
             .setTitle("Tip")

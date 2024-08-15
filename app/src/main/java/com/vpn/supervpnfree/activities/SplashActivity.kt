@@ -59,7 +59,7 @@ class SplashActivity : BaseActivity() {
         getUUID()
         initData()
         initProgress()
-        initAdJust(MainApp.getContext())
+        initAdJust(MainApp.context)
         val params = ConsentRequestParameters.Builder().setTagForUnderAgeOfConsent(false).build()
         consentInformation = UserMessagingPlatform.getConsentInformation(this)
         consentInformation?.requestConsentInfoUpdate(
@@ -94,7 +94,7 @@ class SplashActivity : BaseActivity() {
         onBackPressedDispatcher.addCallback(this) {
         }
 
-        val isConnected = UpDataUtils.isNetworkAvailable(MainApp.getContext())
+        val isConnected = UpDataUtils.isNetworkAvailable(MainApp.context)
         Log.e("TAG", "onCreate: isConnected=${isConnected}", )
     }
     private fun openOpenShowAdData(){

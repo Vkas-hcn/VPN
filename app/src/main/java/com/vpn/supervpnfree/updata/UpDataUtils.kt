@@ -52,7 +52,7 @@ object UpDataUtils {
         adBean: AdEasy? = null
     ): JSONObject {
         val jsonData = JSONObject()
-        val preference = Preference(MainApp.getContext())
+        val preference = Preference(MainApp.context)
         jsonData.apply {
             if (haveAd) {
                 val loadCity = adBean?.maxx_load_city ?: "null"
@@ -76,8 +76,8 @@ object UpDataUtils {
                 put("tucson", "1")
                 //app_version
                 put(
-                    "tenspot", MainApp.getContext().packageManager.getPackageInfo(
-                        MainApp.getContext().packageName,
+                    "tenspot", MainApp.context.packageManager.getPackageInfo(
+                        MainApp.context.packageName,
                         0
                     ).versionName
                 )
@@ -87,7 +87,7 @@ object UpDataUtils {
             })
             put("snotty", JSONObject().apply {
                 //bundle_id
-                put("barbaric", MainApp.getContext().packageName)
+                put("barbaric", MainApp.context.packageName)
                 //os_version
                 put("hearst", "1")
 
@@ -339,7 +339,7 @@ object UpDataUtils {
     }
 
     fun postInstallData(context: Context, referrerDetails: ReferrerDetails) {
-        val preference = Preference(MainApp.getContext())
+        val preference = Preference(MainApp.context)
 
         if (preference.getStringpreference(KeyAppFun.tba_install_type, "") == "1") {
             return
@@ -410,7 +410,7 @@ object UpDataUtils {
     }
 
     fun beforeLoadQTV(ufDetailBean: AdEasy): AdEasy {
-        val preference = Preference(MainApp.getContext())
+        val preference = Preference(MainApp.context)
         val ss_data = MainApp.saveLoadManager.decodeBool(
             KeyAppFun.easy_vpn_flow_data, AdUtils.getIsOrNotRl(preference)
         )
@@ -427,7 +427,7 @@ object UpDataUtils {
 
 
     fun afterLoadQTV(ufDetailBean: AdEasy): AdEasy {
-        val preference = Preference(MainApp.getContext())
+        val preference = Preference(MainApp.context)
         val ss_data = MainApp.saveLoadManager.decodeBool(
             KeyAppFun.easy_vpn_flow_data, AdUtils.getIsOrNotRl(preference)
         )
@@ -455,7 +455,7 @@ object UpDataUtils {
         adRevenue.setAdRevenueNetwork(responseInfo?.mediationAdapterClassName)
         Adjust.trackAdRevenue(adRevenue)
         if (!BuildConfig.DEBUG) {
-            AppEventsLogger.newLogger(MainApp.getContext()).logPurchase(
+            AppEventsLogger.newLogger(MainApp.context).logPurchase(
                 (adValue.valueMicros / 1000000.0).toBigDecimal(), Currency.getInstance("USD")
             )
         } else {
@@ -514,7 +514,7 @@ object UpDataUtils {
 
     fun super10() {
         GlobalScope.launch(Dispatchers.IO) {
-            val netState = isNetworkAvailable(MainApp.getContext())
+            val netState = isNetworkAvailable(MainApp.context)
             val isHaveData = if (netState) {
                 "1"
             } else {
@@ -545,7 +545,7 @@ object UpDataUtils {
     }
 
     fun super14(adType: String) {
-        val preference = Preference(MainApp.getContext())
+        val preference = Preference(MainApp.context)
         val ss_data = MainApp.saveLoadManager.decodeBool(
             KeyAppFun.easy_vpn_flow_data, AdUtils.getIsOrNotRl(preference)
         )

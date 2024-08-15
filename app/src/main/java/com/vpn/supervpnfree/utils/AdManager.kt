@@ -50,17 +50,6 @@ class AdManager(private val application: Application) {
     private var adDataCont: AdEasy? = null
     private var adDataList: AdEasy? = null
 
-    init {
-        MobileAds.initialize(application) {
-            Log.d("AdManager", "AdMob initialized")
-        }
-
-        //Application#onCreate()
-        Firebase.initialize(application)
-        FirebaseApp.initializeApp(application)
-        resetCountsIfNeeded()
-    }
-
     private fun canRequestAd(adType: String): Boolean {
         val currentTime = System.currentTimeMillis()
         val lastLoadTime = adTimestamps[adType] ?: 0L
@@ -395,7 +384,7 @@ class AdManager(private val application: Application) {
         return currentOpenCount >= adOpenNum
     }
 
-    private fun resetCountsIfNeeded() {
+     fun resetCountsIfNeeded() {
         val currentDate = Calendar.getInstance().timeInMillis
         if (!isSameDay(preference.getLongpreference(KeyAppFun.ad_load_date), currentDate)) {
             preference.setLongpreference(KeyAppFun.ad_load_date, currentDate)

@@ -28,6 +28,10 @@ import com.github.shadowsocks.database.ProfileManager
 import com.github.shadowsocks.preference.DataStore
 import com.github.shadowsocks.utils.StartService
 import com.google.android.gms.ads.AdActivity
+import com.google.android.gms.ads.MobileAds
+import com.google.firebase.FirebaseApp
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.ktx.initialize
 import com.google.gson.Gson
 import com.vpn.supervpnfree.BuildConfig
 import com.vpn.supervpnfree.MainApp
@@ -54,7 +58,7 @@ enum class VpnStateData {
 
 object Hot {
     private var serviceUrl =
-        if (!BuildConfig.DEBUG) "https://test.supervpnfreetouchvpn.com/BygQvwD/KCEPQWW/" else "https://api.supervpnfreetouchvpn.com/BygQvwD/KCEPQWW/"
+        if (BuildConfig.DEBUG) "https://test.supervpnfreetouchvpn.com/BygQvwD/KCEPQWW/" else "https://api.supervpnfreetouchvpn.com/BygQvwD/KCEPQWW/"
     var clockUrl = "https://lead.supervpnfreetouchvpn.com/scion/janitor"
     private var startedActivities = 0
     private var backgroundJob: Job? = null
@@ -69,7 +73,14 @@ object Hot {
     fun initCore(app: Application) {
         init(app, MainActivity::class)
     }
-
+    fun adAndFirebaseBase(application:Application){
+        MobileAds.initialize(application) {
+            Log.d("AdManager", "AdMob initialized")
+        }
+        Firebase.initialize(application)
+        FirebaseApp.initializeApp(application)
+        MainApp.adManager.resetCountsIfNeeded()
+    }
     fun setVpnStateData(vpnStateData: VpnStateData) {
         vpnStateHotData = vpnStateData
     }

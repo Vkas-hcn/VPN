@@ -39,6 +39,7 @@ public class MainApp extends MultiDexApplication {
         Hot.INSTANCE.initCore(this);
         if(Hot.INSTANCE.isMainProcess(this)){
             adManager = new AdManager(this);
+            Hot.INSTANCE.adAndFirebaseBase(this);
             Hot.INSTANCE.registerAppLifeCallback(this);
             globalTimer = new GlobalTimer();
         }

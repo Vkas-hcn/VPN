@@ -100,16 +100,16 @@ class EndActivity : BaseActivity() {
     private fun showReturnFun() {
         UpDataUtils.postPointData("super21", null, null, null, null)
         lifecycleScope.launch {
-            if (MainApp.adManager.canShowAd(KeyAppFun.list_type) == KeyAppFun.ad_jump_over) {
+            if (MainApp.adManager.canShowAd(KeyAppFun.ba_type) == KeyAppFun.ad_jump_over) {
                 setResult(Activity.RESULT_OK, intent)
                 finish()
                 return@launch
             }
-            if (MainApp.adManager.canShowAd(KeyAppFun.list_type) == KeyAppFun.ad_show) {
+            if (MainApp.adManager.canShowAd(KeyAppFun.ba_type) == KeyAppFun.ad_show) {
                 con_load_ad?.isVisible = true
                 delay(1000)
                 con_load_ad?.isVisible = false
-                MainApp.adManager.showAd(KeyAppFun.list_type, this@EndActivity) {
+                MainApp.adManager.showAd(KeyAppFun.ba_type, this@EndActivity) {
                     setResult(Activity.RESULT_OK, intent)
                     finish()
                 }

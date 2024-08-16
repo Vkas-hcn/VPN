@@ -3,12 +3,13 @@ package com.vpn.supervpnfree
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
+import com.github.shadowsocks.Core
 import com.google.android.gms.ads.MobileAds
 import com.google.firebase.FirebaseApp
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.ktx.initialize
 import com.tencent.mmkv.MMKV
-import com.vpn.supervpnfree.data.Hot.initCore
+import com.vpn.supervpnfree.activities.MainActivity
 import com.vpn.supervpnfree.data.Hot.isMainProcess
 import com.vpn.supervpnfree.data.Hot.registerAppLifeCallback
 import com.vpn.supervpnfree.utils.AdManager
@@ -21,7 +22,7 @@ class MainApp : Application() {
         FirebaseApp.initializeApp(this)
         context = this
         initHydraSdk()
-        initCore(this)
+        Core.init(this, MainActivity::class)
         if (isMainProcess(this)) {
             MobileAds.initialize(this)
             adManager = AdManager(this)

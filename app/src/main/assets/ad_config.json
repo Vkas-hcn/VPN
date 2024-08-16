@@ -40,5 +40,13 @@
       "easy_isd": "ca-app-pub-3940256099942544/1033173712",
       "easy_no": 1
     }
+  ],
+  "ba_easy": [
+    {
+      "easy_ty": "interstitial",
+      "easy_pt": "admob",
+      "easy_isd": "ca-app-pub-3940256099942544/1033173712",
+      "easy_no": 1
+    }
   ]
 }

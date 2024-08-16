@@ -250,7 +250,7 @@ class MainActivity : UIActivity() {
                 startVpnProcess()
             }
             if (Hot.vpnStateHotData == VpnStateData.CONNECTED) {
-                MainApp.adManager.loadAd(KeyAppFun.list_type)
+                MainApp.adManager.loadAd(KeyAppFun.ba_type)
                 MainApp.adManager.loadAd(KeyAppFun.result_type)
                 updateUI(VpnStateData.DISCONNECTING)
                 delay(2000)
@@ -344,7 +344,7 @@ class MainActivity : UIActivity() {
                                 updateUI(Hot.vpnStateHotData)
                             }
                         }
-                        MainApp.adManager.loadAd(KeyAppFun.list_type)
+                        MainApp.adManager.loadAd(KeyAppFun.ba_type)
                         MainApp.adManager.loadAd(KeyAppFun.result_type)
                     }
                     super10()

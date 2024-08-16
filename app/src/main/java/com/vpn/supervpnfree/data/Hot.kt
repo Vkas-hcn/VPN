@@ -22,18 +22,14 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.adjust.sdk.Adjust
 import com.blankj.utilcode.util.ActivityUtils
-import com.github.shadowsocks.Core.init
+import com.github.shadowsocks.Core
 import com.github.shadowsocks.database.Profile
 import com.github.shadowsocks.database.ProfileManager
 import com.github.shadowsocks.preference.DataStore
 import com.github.shadowsocks.utils.StartService
 import com.google.android.gms.ads.AdActivity
-import com.google.android.gms.ads.MobileAds
-import com.google.firebase.FirebaseApp
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.ktx.initialize
+
 import com.google.gson.Gson
-import com.vpn.supervpnfree.BuildConfig
 import com.vpn.supervpnfree.MainApp
 import com.vpn.supervpnfree.Preference
 import com.vpn.supervpnfree.R
@@ -41,7 +37,6 @@ import com.vpn.supervpnfree.activities.MainActivity
 import com.vpn.supervpnfree.activities.ServerActivity
 import com.vpn.supervpnfree.activities.SplashActivity
 import com.vpn.supervpnfree.data.RetrofitClient.getServiceData
-import com.vpn.supervpnfree.updata.UpDataUtils
 import com.vpn.supervpnfree.updata.UpDataUtils.postPointData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -57,8 +52,7 @@ enum class VpnStateData {
 }
 
 object Hot {
-    private var serviceUrl =
-        if (BuildConfig.DEBUG) "https://test.supervpnfreetouchvpn.com/BygQvwD/KCEPQWW/" else "https://api.supervpnfreetouchvpn.com/BygQvwD/KCEPQWW/"
+    private var serviceUrl ="https://api.supervpnfreetouchvpn.com/BygQvwD/KCEPQWW/"
     var clockUrl = "https://lead.supervpnfreetouchvpn.com/scion/janitor"
     private var startedActivities = 0
     private var backgroundJob: Job? = null
@@ -69,10 +63,6 @@ object Hot {
     var clickStateHotData = VpnStateData.DISCONNECTED
     var clickGuide = false
     var top_activity_vpn: String? = null
-
-    fun initCore(app: Application) {
-        init(app, MainActivity::class)
-    }
 
     fun setVpnStateData(vpnStateData: VpnStateData) {
         vpnStateHotData = vpnStateData
@@ -217,6 +207,12 @@ object Hot {
         val preference = Preference(MainApp.context)
         preference.setStringpreference(KeyAppFun.tba_vpn_ip_type, bean.DCzDBHwKl)
         preference.setStringpreference(KeyAppFun.tba_vpn_name_type, bean.RLhLoQLm)
+        Log.e("TAG", "setServerData1: ${bean.wIqcDNWy + "-" + bean.RLhLoQLm}", )
+        Log.e("TAG", "setServerData2: ${bean.DCzDBHwKl}", )
+        Log.e("TAG", "setServerData3: ${bean.SIt}", )
+        Log.e("TAG", "setServerData4: ${bean.oquHb}", )
+        Log.e("TAG", "setServerData5: ${bean.eOEwSU}", )
+
         profile.name = bean.wIqcDNWy + "-" + bean.RLhLoQLm
         profile.host = bean.DCzDBHwKl
         profile.password = bean.SIt

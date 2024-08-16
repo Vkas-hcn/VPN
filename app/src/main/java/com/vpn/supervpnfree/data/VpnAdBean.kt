@@ -11,7 +11,9 @@ data class VpnAdBean(
     val resu_easy: List<AdEasy>,
     val cont_easy: List<AdEasy>,
     val list_easy: List<AdEasy>,
-)
+    val ba_easy: List<AdEasy>,
+
+    )
 @Keep
 data class AdEasy(
     val easy_isd: String,

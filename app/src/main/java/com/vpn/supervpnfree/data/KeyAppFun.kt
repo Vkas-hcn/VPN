@@ -8,6 +8,7 @@ object KeyAppFun {
     const val result_type = "resu_easy"
     const val cont_type = "cont_easy"
     const val list_type = "list_easy"
+    const val ba_type = "ba_type"
 
 
     const val o_ad_data = "wry"

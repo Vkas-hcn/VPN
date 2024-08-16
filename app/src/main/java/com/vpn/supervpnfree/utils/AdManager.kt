@@ -49,10 +49,11 @@ class AdManager(private val application: Application) {
     private var adDataResult: AdEasy? = null
     private var adDataCont: AdEasy? = null
     private var adDataList: AdEasy? = null
+    private var adDataBa: AdEasy? = null
 
     init {
-       resetCountsIfNeeded()
-        Log.e("TAG", ":adManager 11111111111111", )
+        resetCountsIfNeeded()
+        Log.e("TAG", ":adManager 11111111111111")
     }
 
     private fun canRequestAd(adType: String): Boolean {
@@ -71,6 +72,8 @@ class AdManager(private val application: Application) {
             KeyAppFun.result_type -> adAllData.resu_easy
             KeyAppFun.cont_type -> adAllData.cont_easy
             KeyAppFun.list_type -> adAllData.list_easy
+            KeyAppFun.ba_type -> adAllData.ba_easy
+
             else -> emptyList()
         }.sortedByDescending { it.easy_no }
 
@@ -91,7 +94,7 @@ class AdManager(private val application: Application) {
             return
         }
         val blackData = AdUtils.getAdBlackData(preference)
-        if (blackData && (adType == KeyAppFun.home_type || adType == KeyAppFun.cont_type || adType == KeyAppFun.list_type)) {
+        if (blackData && (adType == KeyAppFun.home_type || adType == KeyAppFun.cont_type || adType == KeyAppFun.list_type || adType == KeyAppFun.ba_type)) {
             Log.e("TAG", "黑名单屏蔽$adType 广告，不在加载: ")
             return
         }
@@ -133,7 +136,7 @@ class AdManager(private val application: Application) {
                 override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                     Log.e("TAG", "${adType}广告加载失败=${loadAdError}")
                     loadAdFromList(adType, adList, index + 1)
-                    super17(adType,loadAdError.message)
+                    super17(adType, loadAdError.message)
                 }
             })
     }
@@ -187,7 +190,7 @@ class AdManager(private val application: Application) {
                 override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                     Log.e("TAG", "${adType}广告加载失败=${loadAdError}")
                     loadAdFromList(adType, adList, index + 1)
-                    super17(adType,loadAdError.message)
+                    super17(adType, loadAdError.message)
                 }
 
                 override fun onAdClicked() {
@@ -203,28 +206,28 @@ class AdManager(private val application: Application) {
 
 
     fun putIntData(ad: InterstitialAd, adType: String) {
-        if (adType == KeyAppFun.cont_type) {
-            ad.setOnPaidEventListener { adValue ->
-                Log.e("TAG", "插屏广告 -${adType}，开始上报: ")
-                UpDataUtils.postAdAllData(
-                    adValue,
-                    ad.responseInfo,
-                    adDataCont!!,
-                    adType
-                )
-                UpDataUtils.toPointAdQTV(adValue, ad.responseInfo)
+        val bean = when (adType) {
+            KeyAppFun.cont_type -> {
+                adDataCont!!
             }
-        } else {
-            ad.setOnPaidEventListener { adValue ->
-                Log.e("TAG", "插屏广告 -${adType}，开始上报: ")
-                UpDataUtils.postAdAllData(
-                    adValue,
-                    ad.responseInfo,
-                    adDataList!!,
-                    adType
-                )
-                UpDataUtils.toPointAdQTV(adValue, ad.responseInfo)
+
+            KeyAppFun.list_type -> {
+                adDataList!!
             }
+
+            else -> {
+                adDataBa!!
+            }
+        }
+        ad.setOnPaidEventListener { adValue ->
+            Log.e("TAG", "插屏广告 -${adType}，开始上报: ")
+            UpDataUtils.postAdAllData(
+                adValue,
+                ad.responseInfo,
+                bean,
+                adType
+            )
+            UpDataUtils.toPointAdQTV(adValue, ad.responseInfo)
         }
     }
 
@@ -234,11 +237,20 @@ class AdManager(private val application: Application) {
         adList: List<AdEasy>,
         index: Int
     ) {
-        if (adType == KeyAppFun.cont_type) {
-            adDataCont = UpDataUtils.beforeLoadQTV(adEasy)
-        } else {
-            adDataList = UpDataUtils.beforeLoadQTV(adEasy)
+        when (adType) {
+            KeyAppFun.cont_type -> {
+                adDataCont = UpDataUtils.beforeLoadQTV(adEasy)
+            }
+
+            KeyAppFun.list_type -> {
+                adDataList = UpDataUtils.beforeLoadQTV(adEasy)
+            }
+
+            else -> {
+                adDataBa = UpDataUtils.beforeLoadQTV(adEasy)
+            }
         }
+
         InterstitialAd.load(application, adEasy.easy_isd, AdRequest.Builder().build(),
             object : InterstitialAdLoadCallback() {
                 override fun onAdLoaded(ad: InterstitialAd) {
@@ -253,7 +265,7 @@ class AdManager(private val application: Application) {
                 override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                     Log.e("TAG", "${adType}广告加载失败=${loadAdError}")
                     loadAdFromList(adType, adList, index + 1)
-                    super17(adType,loadAdError.message)
+                    super17(adType, loadAdError.message)
                 }
             })
     }
@@ -329,10 +341,19 @@ class AdManager(private val application: Application) {
                     ad.show(activity)
                     Log.e("TAG", "展示-${adType}广告: ")
                     adCache.remove(adType)
-                    if (adType == KeyAppFun.cont_type) {
-                        adDataCont = UpDataUtils.afterLoadQTV(adDataCont!!)
-                    } else {
-                        adDataList = UpDataUtils.afterLoadQTV(adDataList!!)
+
+                    when (adType) {
+                        KeyAppFun.cont_type -> {
+                            adDataCont = UpDataUtils.afterLoadQTV(adDataCont!!)
+                        }
+
+                        KeyAppFun.list_type -> {
+                            adDataList = UpDataUtils.afterLoadQTV(adDataList!!)
+                        }
+
+                        else -> {
+                            adDataBa = UpDataUtils.afterLoadQTV(adDataBa!!)
+                        }
                     }
                 }
             }
@@ -342,20 +363,24 @@ class AdManager(private val application: Application) {
     fun canShowAd(adType: String): String {
         val ad = adCache[adType]
         val blackData = AdUtils.getAdBlackData(preference)
-        if (blackData && (adType == KeyAppFun.home_type || adType == KeyAppFun.cont_type || adType == KeyAppFun.list_type)) {
+        if (blackData && (adType == KeyAppFun.home_type || adType == KeyAppFun.cont_type || adType == KeyAppFun.list_type || adType == KeyAppFun.ba_type)) {
             return KeyAppFun.ad_jump_over
         }
 
         if (ad == null && !canLoadAd()) {
             val preference = Preference(MainApp.context)
-            if(preference.getStringpreference(KeyAppFun.ad_more_type,"")!="1"){
-                val type =  if(isShowAdMore()){"show"}else{"click"}
+            if (preference.getStringpreference(KeyAppFun.ad_more_type, "") != "1") {
+                val type = if (isShowAdMore()) {
+                    "show"
+                } else {
+                    "click"
+                }
                 UpDataUtils.postPointData(
                     "super16",
                     "seru",
                     type,
                 )
-                preference.setStringpreference(KeyAppFun.ad_more_type,"1")
+                preference.setStringpreference(KeyAppFun.ad_more_type, "1")
             }
 
             return KeyAppFun.ad_jump_over
@@ -369,7 +394,7 @@ class AdManager(private val application: Application) {
         return KeyAppFun.ad_show
     }
 
-    fun isHaveCage(adType: String):Boolean{
+    fun isHaveCage(adType: String): Boolean {
         val ad = adCache[adType]
         return ad != null
     }
@@ -383,19 +408,19 @@ class AdManager(private val application: Application) {
         return currentOpenCount < adOpenNum && currentClickCount < adClickNum
     }
 
-    fun isShowAdMore():Boolean{
+    fun isShowAdMore(): Boolean {
         val currentOpenCount = preference.getIntpreference(KeyAppFun.ad_show_nums)
         val adOpenNum = adAllData.easy_esc
         return currentOpenCount >= adOpenNum
     }
 
-     fun resetCountsIfNeeded() {
+    fun resetCountsIfNeeded() {
         val currentDate = Calendar.getInstance().timeInMillis
         if (!isSameDay(preference.getLongpreference(KeyAppFun.ad_load_date), currentDate)) {
             preference.setLongpreference(KeyAppFun.ad_load_date, currentDate)
             preference.setIntpreference(KeyAppFun.ad_click_nums, 0)
             preference.setIntpreference(KeyAppFun.ad_show_nums, 0)
-            preference.setStringpreference(KeyAppFun.ad_more_type,"0")
+            preference.setStringpreference(KeyAppFun.ad_more_type, "0")
 
         }
     }

@@ -66,18 +66,22 @@ class AdManager(private val application: Application) {
         adAllData = AdUtils.getAdListData(preference)
         if (adLoadInProgress[adType] == true) return
         adLoadInProgress[adType] = true
-        val adList = when (adType) {
-            KeyAppFun.open_type -> adAllData.ope_easy
-            KeyAppFun.home_type -> adAllData.home_easy
-            KeyAppFun.result_type -> adAllData.resu_easy
-            KeyAppFun.cont_type -> adAllData.cont_easy
-            KeyAppFun.list_type -> adAllData.list_easy
-            KeyAppFun.ba_type -> adAllData.ba_easy
+        try {
+            val adList = when (adType) {
+                KeyAppFun.open_type -> adAllData.ope_easy
+                KeyAppFun.home_type -> adAllData.home_easy
+                KeyAppFun.result_type -> adAllData.resu_easy
+                KeyAppFun.cont_type -> adAllData.cont_easy
+                KeyAppFun.list_type -> adAllData.list_easy
+                KeyAppFun.ba_type -> adAllData.ba_easy
+                else -> emptyList()
+            }.sortedByDescending { it.easy_no }
 
-            else -> emptyList()
-        }.sortedByDescending { it.easy_no }
+            loadAdFromList(adType, adList, 0)
+        }catch (e:Exception){
 
-        loadAdFromList(adType, adList, 0)
+        }
+
     }
 
     private fun loadAdFromList(adType: String, adList: List<AdEasy>, index: Int) {
